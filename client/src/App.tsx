@@ -3,18 +3,19 @@ import './App.css';
 import MonacoEditor from 'react-monaco-editor';
 import io from 'socket.io-client';
 import './utils/Game';
+import {Cell} from "./utils/Game";
 
 declare var fabric: any;
 declare var socket: any;
 
 declare global {
-    interface Window { game: any; socket: any }
+    interface Window { game: any; socket: any, c1: Cell, c2: Cell, c3: Cell }
 }
 
 window.socket = io('http://localhost:3001');
 
 function App() {
-    const [code, setCode] = useState('const bar = 234;');
+    const [code, setCode] = useState(localStorage.getItem('code') || 'const foo = 123;');
     let canvas: any;
 
     useEffect(() => {
@@ -24,6 +25,7 @@ function App() {
             if(map['13'] && map['16']) {
                 e.preventDefault();
                 eval(code);
+                localStorage.setItem('code', code);
             }
         };
     }, [code]);
@@ -73,12 +75,10 @@ function App() {
     function handleCanvasMovement(canvas: any) {
         canvas.on('mouse:down', function(opt: any) {
             const evt = opt.e;
-            if (true) {
-                canvas.isDragging = true;
-                canvas.selection = false;
-                canvas.lastPosX = evt.clientX;
-                canvas.lastPosY = evt.clientY;
-            }
+            canvas.isDragging = true;
+            canvas.selection = false;
+            canvas.lastPosX = evt.clientX;
+            canvas.lastPosY = evt.clientY;
         });
         canvas.on('mouse:move', function(opt: any) {
             if (canvas.isDragging) {

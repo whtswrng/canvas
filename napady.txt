@@ -1,11 +1,11 @@
-- mam 3 bunky (vic jich mit nemuzu)
+x mam 3 bunky (vic jich mit nemuzu)
 - nekolik bunek co farmi, utoci, etc... vsechny se daji programovat
 - nafarmene itemy jdou na bunku, jedna bunka muze predat veci druhe
 - bunky se mohou expit (zacatek 1, max 50)?
 - bunky mohou zabijet nepratelske bunky (z toho padaj dropy a expy)
 - pokud mi nekdo zabije bunku tak s ni nemuzu nekolik minut nic delat
 - mam zakladni atributy a specialni atributy:
-    zakladni: hp, attack, speed
+    zakladni: hp, power, speed, energy, regeneration
     specialni: craft, farm, enchant
 - z nepratelskych bunek mohou padat i itemy
 - itemy muzu nasazovat: helma, telo, boty, ruce, zbran

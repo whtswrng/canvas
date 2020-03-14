@@ -1,92 +1,14 @@
-import * as fs from "fs";
-import {generateNumberBetween} from "./utils/between";
+import {Game} from "./game";
+import {PlayerCell} from "./cell/player-cell";
 const app = require('express')();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 const fabric = require('fabric').fabric;
 
 const connections = [];
-const canvasSize = 5000;
-const canvas = new fabric.StaticCanvas(null, { width: canvasSize, height: canvasSize });
-let localCanvas = new fabric.StaticCanvas(null, { width: canvasSize, height: canvasSize });
-const CONFIG = {
-    visibilityRadius: 300
-};
-
-startGame();
-
-function startGame() {
-    const text = new fabric.Text('Welcome!', {
-        left: 2,
-        top: 2,
-        fill: '#ff0e4c',
-        angle: 15,
-    });
-    canvas.add(text);
-
-    setInterval(() => {
-        console.log('generating an object!');
-        const left = generateNumberBetween(0, canvasSize);
-        const top = generateNumberBetween(0, canvasSize);
-        const circle = new fabric.Circle({
-            radius: 10, fill: 'blue', left, top
-        });
-        canvas.add(circle);
-    }, 2000);
-
-    (async function _tick() {
-        for(let i = 0; i < connections.length; i++) {
-            connections[i].emit('DRAW_GAME', renderGame(connections[i]._gameObject));
-        }
-        await waitFor(45);
-        _tick();
-    })();
-
-    (async function _move() {
-        for(let i = 0; i < connections.length; i++) {
-            const socket = connections[i];
-            const circle = socket._gameObject;
-
-            if(circle._degree === undefined || ! circle._isMoving) continue;
-
-            const movement = {
-                degrees: parseInt(circle._degree),
-                amount: 3.5
-            };
-
-            const angle = (movement.degrees - 90) / 180 * Math.PI;
-            const left = circle.left + (movement.amount * Math.cos(angle));
-            const top = circle.top + (movement.amount * Math.sin(angle));
-
-            if(left <= 0 || left >= canvasSize - (circle.radius * 2) || top <= 0 || top >= canvasSize - (circle.radius * 2)) {
-                continue;
-            }
-
-            circle.left = left;
-            circle.top = top;
-            circle.setCoords();
-        }
-        await waitFor(50);
-        _move();
-    })()
-}
-
-function waitFor(ms: number): Promise<void> {
-    return new Promise((res) => setTimeout(res, ms));
-}
-
-function renderGame(gameObject) {
-    localCanvas.clear();
-    canvas.getObjects().forEach((o) => {
-        if(Math.abs(o.left - gameObject.left) <= CONFIG.visibilityRadius && Math.abs(o.top - gameObject.top) <= CONFIG.visibilityRadius) {
-            localCanvas.add(fabric.util.object.clone(o));
-        }
-    });
-
-    const result = JSON.stringify(localCanvas);
-
-    return result;
-}
+const game = new Game(connections);
+const canvasSize = game.getCanvasSize();
+game.startGame();
 
 app.get('/', function(req, res){
     res.sendFile(__dirname + '/public/index.html');
@@ -94,18 +16,59 @@ app.get('/', function(req, res){
 
 io.on('connection', function(socket){
     connections.push(socket);
-    const circle = new fabric.Circle({
-        radius: 20, fill: 'green', left: 250, top: 250
-    });
-    canvas.add(circle);
-    socket._gameObject = circle;
-    console.log('a user connected');
+    const c1 = new PlayerCell(() => new fabric.Circle({radius: 20, fill: 'white', left: 250, top: 250}), 'c1', socket, canvasSize);
+    const c2 = new PlayerCell(() => new fabric.Circle({radius: 20, fill: 'white', left: 250, top: 250}), 'c2', socket, canvasSize);
+    const c3 = new PlayerCell(() => new fabric.Circle({radius: 20, fill: 'white', left: 250, top: 250}), 'c3', socket, canvasSize);
 
-    socket.on('MOVE_ANGLE', (degree: number) => {
-        // socket._gameObject = circle;
-        socket._gameObject._degree = degree;
-        socket._gameObject._isMoving = true;
-        console.log('moving degree: ', degree);
+    game.addCell(c1);
+    game.addCell(c2);
+    game.addCell(c3);
+    socket._c1 = c1;
+    socket._c2 = c2;
+    socket._c3 = c3;
+    console.log('a user connected, creating cells!');
+
+    socket.on('MOVE', ({cell, degrees}) => {
+        const socketCell = socket['_' + cell] as PlayerCell;
+        if(socketCell) {
+            socketCell.move(parseInt(degrees));
+        }
+    });
+
+    socket.on('STOP', ({cell}) => {
+        const socketCell = socket['_' + cell] as PlayerCell;
+        if(socketCell) {
+            socketCell.stop();
+        }
+    });
+
+    socket.on('ATTACK', ({cell}) => {
+        const socketCell = socket['_' + cell] as PlayerCell;
+        if(socketCell) {
+            socketCell.stop();
+            game.attack(socketCell);
+        }
+    });
+
+    socket.on('GET_SPECIALIZATION', ({cell}, ack) => {
+        const socketCell = socket['_' + cell] as PlayerCell;
+        if(socketCell) {
+            ack(socketCell.getSpecialization());
+        }
+    });
+
+    socket.on('GET_ATTRIBUTES', ({cell}, ack) => {
+        const socketCell = socket['_' + cell] as PlayerCell;
+        if(socketCell) {
+            ack(socketCell.getAttributes());
+        }
+    });
+
+    socket.on('GET_ITEMS', ({cell}, ack) => {
+        const socketCell = socket['_' + cell] as PlayerCell;
+        if(socketCell) {
+            ack(socketCell.getItems());
+        }
     });
 
 });
