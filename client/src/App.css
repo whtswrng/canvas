@@ -1,0 +1,22 @@
+body {
+    background: #2a2a2a;
+}
+
+.canvas-container {
+    border: 2px dashed #404040;
+    float: right;
+}
+
+.App {
+    width: 1150px;
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+    flex-direction: row;
+}
+
+.react-monaco-editor-container {
+}
+
+#gameCanvas {
+}
