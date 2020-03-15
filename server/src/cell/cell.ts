@@ -1,28 +1,43 @@
-import {CONFIG} from "../game";
+import {CONFIG, Drop, Item} from "../game";
 import {generateNumberBetween} from "../utils/between";
+import {generateItemsFromDropList} from "../utils/generate-drop-list";
+
+export interface CellConfig {
+    dropList: Array<Drop>,
+    expRange: [number, number],
+    name: string,
+    attributes: CellAttributes,
+    respawnTimeInMS: number,
+    respawnReach: number,
+    spawnCoordinates: Array<number>,
+    isAttackable: boolean
+}
+
+export interface CellAttributes {
+    power: number,
+    speed: number,
+    hp: number,
+    energy: number,
+    regeneration: number,
+    exp: number,
+    farm: number,
+    craft: number,
+    enchant: number
+}
 
 export class Cell {
     public socket?: any;
     public isMoving = false;
     public movementDegrees = 0;
-    public items = [];
-    public baseAttributes = {
-        power: 10,
-        speed: 3.5,
-        hp: 50,
-        energy: 50,
-        regeneration: 4
-    };
-    public attributes = {...this.baseAttributes};
-    public specialization = {
-        farm: 50,
-        craft: 40,
-        enchant: 40
-    };
+    public items: Array<Item> = [];
+    public baseAttributes: CellAttributes;
+    public attributes: CellAttributes;
     private gameObject: any;
     private isAttacking = false;
 
-    public constructor(protected instantiateGameObject: () => any, public name: string, protected canvasSize: number) {
+    public constructor(protected instantiateGameObject: (cellConfig: CellConfig) => any, protected canvasSize: number, protected cellConfig: CellConfig) {
+        this.baseAttributes = {...cellConfig.attributes};
+        this.attributes = {...this.baseAttributes};
         this.respawn();
         this.initRegeneration();
     }
@@ -37,26 +52,32 @@ export class Cell {
                 if(this.attributes.hp > this.baseAttributes.hp) this.attributes.hp = this.baseAttributes.hp;
                 if(this.attributes.energy > this.baseAttributes.energy) this.attributes.energy = this.baseAttributes.energy;
             }
-        }, 2000);
+        }, 3200);
     }
 
     public getGameObject() {
         return this.gameObject;
     }
 
-    public getSpecialization() {
-        return this.specialization;
+    public getLevel() {
+        if(this.attributes.exp < 1000) {
+            return 1;
+        } else if(this.attributes.exp >= 1000 && this.attributes.exp <= 2500) {
+            return 2;
+        }
+
+        return 3;
     }
 
     public getAttributes() {
-        return this.attributes;
+        return {...this.attributes, level: this.getLevel()};
     }
 
     public getItems() {
         return this.items;
     }
 
-    public tryToRespawn(respawnFc: () => void) {
+    public planRespawn(respawnFc: () => void) {
         setTimeout(() => {
             console.log('respawning!');
             this.respawn();
@@ -64,18 +85,50 @@ export class Cell {
         }, 10000);
     }
 
-    public generateDrop() {
-        return [];
+    public generateDropItems(): Array<Item> {
+        return generateItemsFromDropList(this.cellConfig.dropList);
+    }
+
+    public isAttackable(): boolean {
+        return this.cellConfig.isAttackable;
+    }
+
+    public isHarvastable(): boolean {
+        return ! this.isAttackable();
+    }
+
+    public generateExp() {
+        return generateNumberBetween(this.cellConfig.expRange[0], this.cellConfig.expRange[1]);
+    }
+
+    public getName() {
+        return this.cellConfig.name;
+    }
+
+    public addReward(items: Array<Item>, exp: number) {
+        this.attributes.exp += exp;
+        items.forEach((i) => {
+            if(i.stackable) {
+                const existingItem = this.items.find((_i) => _i.name === i.name);
+                if(existingItem) {
+                    existingItem.amount += i.amount;
+                } else {
+                    this.items.push(i);
+                }
+            } else {
+                this.items.push(i);
+            }
+        });
     }
 
     private respawn() {
-        this.gameObject = this.instantiateGameObject();
+        this.gameObject = this.instantiateGameObject(this.cellConfig);
         this.gameObject._cell = this;
         this.resetAttributes();
     }
 
     private resetAttributes() {
-        this.attributes = {...this.baseAttributes};
+        this.attributes = {...this.baseAttributes, exp: this.attributes.exp};
     }
 
     public receiveDamage(cell: Cell, power: number): boolean {
@@ -89,11 +142,11 @@ export class Cell {
         this.attributes.hp = newHp;
     }
 
-    public attackTarget(target: Cell): undefined | number {
-        if( ! this.canAttack() || target.isDead()) return;
+    public attackTarget(target: Cell, attackAttribute: string): undefined | number {
+        if(this.isBusy()) return;
 
         this.isAttacking = true;
-        const damage = Math.round(generateNumberBetween(this.getAttributes().power * 0.85, this.getAttributes().power * 1.15));
+        const damage = Math.round(generateNumberBetween(this.getAttributes()[attackAttribute] * 0.85, this.getAttributes()[attackAttribute] * 1.15));
         this.attributes.energy -= 4;
         target.receiveDamage(this, damage);
 
@@ -102,8 +155,8 @@ export class Cell {
         return damage;
     }
 
-    public canAttack() {
-        return ! this.isDead() && ! this.isAttacking && this.attributes.energy >= 4;
+    public isBusy() {
+        return this.isDead() || this.isAttacking || this.attributes.energy < 4;
     }
 
     public move(degrees: number) {

@@ -1,9 +1,9 @@
-import {Cell} from "./cell";
+import {Cell, CellConfig} from "./cell";
 
 export class MonsterCell extends Cell {
 
-    public constructor(protected instantiateGameObject: () => any, public name: string, protected canvasSize: number) {
-        super(instantiateGameObject, name, canvasSize);
+    public constructor(protected instantiateGameObject: () => any, protected canvasSize: number, protected cellConfig: CellConfig) {
+        super(instantiateGameObject, canvasSize, cellConfig);
     }
 
 }

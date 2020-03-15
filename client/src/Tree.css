@@ -1,0 +1,16 @@
+.tree {
+    width: 250px;
+    background-color: #232121;
+}
+
+.tree-item {
+    color: #d0d0d0;
+    padding: 10px;
+    padding-top: 2px;
+    cursor: pointer;
+}
+
+.tree-item-actions {
+    display: inline-block;
+    float: right;
+}

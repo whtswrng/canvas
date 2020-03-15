@@ -34,9 +34,19 @@ export class Cell {
         window.socket.emit('ATTACK', {cell: this.cell});
     }
 
+    public harvest() {
+        window.socket.emit('HARVEST', {cell: this.cell});
+    }
+
     public async getAttributes() {
         return new Promise((res, rej) => {
             window.socket.emit('GET_ATTRIBUTES', {cell: this.cell}, (data) => res(data));
+        });
+    }
+
+    public async getItems() {
+        return new Promise((res, rej) => {
+            window.socket.emit('GET_ITEMS', {cell: this.cell}, (data) => res(data));
         });
     }
 

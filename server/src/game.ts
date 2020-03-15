@@ -2,8 +2,11 @@ import {MonsterCell} from "./cell/monster-cell";
 
 const fabric = require('fabric').fabric;
 import {generateNumberBetween} from "./utils/between";
-import {Cell} from "./cell/cell";
+import {Cell, CellConfig} from "./cell/cell";
 import {PlayerCell} from "./cell/player-cell";
+import {ObjectCell} from "./cell/object-cell";
+import {objectCells} from "./cell/object-cells-config";
+import {monsterCells} from "./cell/monster-cells-config";
 
 export const CONFIG = {
     visibilityRadius: 300,
@@ -13,9 +16,24 @@ export const CONFIG = {
 const canvasSize = 5000;
 const canvas = new fabric.StaticCanvas(null, { width: canvasSize, height: canvasSize });
 
+export interface Item {
+    name: string,
+    amount: number,
+    stackable: boolean,
+    quality: 'COMMON' | 'RARE' | 'EPIC',
+    canEquip: boolean,
+    type: 'MATERIAL' | 'HELMET' | 'ARMOR' | 'WEAPON' | 'HANDS' | 'BOOTS' | 'OTHER'
+}
+
+export interface Drop {
+    dropChance: number,
+    item: Item
+}
+
 export class Game {
 
     private npcList: Array<Cell> = [];
+    private farmObjectList: Array<ObjectCell> = [];
 
     constructor(private connections: Array<any>) {
     }
@@ -27,58 +45,68 @@ export class Game {
     public startGame() {
         this.initRenderCanvas();
         this.initMovement();
-        this.initRenderNPC();
+        this.initRenderMonsters();
+        this.initRenderObjects();
         this.renderInitialObjects();
     }
 
-    public attack(from: Cell) {
+    public attack(from: Cell, attackAttribute: string) {
         const gameObject = from.getGameObject();
         const target = canvas.getObjects().find((o) => {
-            return o !== gameObject && Math.abs(o.left - gameObject.left) <= 40 && Math.abs(o.top - gameObject.top) <= 40;
+            const isClose = o !== gameObject && Math.abs(o.left - gameObject.left) <= 40 && Math.abs(o.top - gameObject.top) <= 40;
+            if( ! isClose) return false;
+
+            const targetCell = o._cell as Cell;
+
+            if(attackAttribute === 'power') {
+                return targetCell.isAttackable();
+            } else {
+                return targetCell.isHarvastable();
+            }
         });
 
         if(target) {
             const targetCell = target._cell as Cell;
-            if(targetCell && ! targetCell.isDead() && from.canAttack()) {
-                const damage = from.attackTarget(targetCell);
+
+            if(targetCell && ! targetCell.isDead() && ! from.isBusy()) {
+                const damage = from.attackTarget(targetCell, attackAttribute);
 
                 if(from.socket) {
-                    from.socket.emit('TARGET_HIT', {target: targetCell.name, from: from.name, damage, attributes: targetCell.getAttributes()});
+                    from.socket.emit('TARGET_HIT', {target: targetCell.getName(), from: from.getName(), damage, attributes: targetCell.getAttributes()});
                 }
 
                 if(targetCell.isDead()) {
-                    console.log('dead!');
                     canvas.remove(target);
-                    targetCell.tryToRespawn(() => canvas.add(targetCell.getGameObject()));
+                    targetCell.planRespawn(() => canvas.add(targetCell.getGameObject()));
                     if(from.socket) {
-                        from.socket.emit('TARGET_DEAD', {target: targetCell.name, from: from.name, attributes: targetCell.getAttributes(), drop: targetCell.generateDrop()});
+                        const dropItems = targetCell.generateDropItems();
+                        from.addReward(dropItems, targetCell.generateExp());
+                        from.socket.emit('TARGET_DEAD', {target: targetCell.getName(), from: from.getName(), attributes: targetCell.getAttributes(), drop: dropItems});
                     }
                 }
             }
         }
     }
 
-    private initRenderNPC() {
-        const left = 0;
-        const top = 250;
+    private initRenderObjects() {
+        objectCells.forEach((o) => {
+            for(let i = 0; i < o.count; i++) {
+                const object = o.createObject(o.cellConfig, canvasSize);
+                canvas.add(object.getGameObject());
+                this.farmObjectList.push(object);
+            }
+        });
 
-        const monster = new MonsterCell(() => new fabric.Circle({
-            radius: 20, fill: 'black', left, top
-        }), 'Gluk', this.getCanvasSize());
-        canvas.add(monster.getGameObject());
-        this.npcList.push(monster);
+    }
 
-        setInterval(() => {
-            console.log('generating a MOB!');
-            const left = generateNumberBetween(0, canvasSize);
-            const top = generateNumberBetween(0, canvasSize);
-
-            const monster = new MonsterCell(() => new fabric.Circle({
-                radius: 20, fill: 'black', left, top
-            }), 'Gluk', this.getCanvasSize());
-            canvas.add(monster.getGameObject());
-            this.npcList.push(monster);
-        }, 2000);
+    private initRenderMonsters() {
+        monsterCells.forEach((o) => {
+            for(let i = 0; i < o.count; i++) {
+                const object = o.createObject(o.cellConfig, canvasSize);
+                canvas.add(object.getGameObject());
+                this.npcList.push(object);
+            }
+        });
     }
 
     private renderInitialObjects() {

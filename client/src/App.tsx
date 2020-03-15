@@ -4,6 +4,7 @@ import MonacoEditor from 'react-monaco-editor';
 import io from 'socket.io-client';
 import './utils/Game';
 import {Cell} from "./utils/Game";
+import {Tree} from "./Tree";
 
 declare var fabric: any;
 declare var socket: any;
@@ -15,7 +16,9 @@ declare global {
 window.socket = io('http://localhost:3001');
 
 function App() {
+    const [currentFile, setCurrentFile] = useState('game-engine.js');
     const [code, setCode] = useState(localStorage.getItem('code') || 'const foo = 123;');
+    const [files, setFiles] = useState([]);
     let canvas: any;
 
     useEffect(() => {
@@ -25,10 +28,16 @@ function App() {
             if(map['13'] && map['16']) {
                 e.preventDefault();
                 eval(code);
-                localStorage.setItem('code', code);
+                window.socket.emit('CHANGE_FILE', {fileName: currentFile, code});
             }
         };
-    }, [code]);
+    }, [code, currentFile]);
+
+    useEffect(() => {
+        window.socket.on('FILES_UPDATED', (files) => {
+            setFiles(files);
+        })
+    }, [files]);
 
     useEffect(() => {
         window.socket.on('DRAW_GAME', (data: string) => {
@@ -59,6 +68,7 @@ function App() {
 
     return (
         <div className="App">
+            <Tree onFileClick={onFileClick} currentFile={currentFile} files={files}/>
             <MonacoEditor
                 width="650"
                 height="800"
@@ -71,6 +81,13 @@ function App() {
             <canvas id="gameCanvas" width="500" height="500"></canvas>
         </div>
     );
+
+    function onFileClick(fileName: string) {
+        window.socket.emit('LOAD_FILE', fileName, (code) => {
+            setCurrentFile(fileName);
+            setCode(code);
+        });
+    }
 
     function handleCanvasMovement(canvas: any) {
         canvas.on('mouse:down', function(opt: any) {
