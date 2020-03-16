@@ -8,18 +8,21 @@ import {Tree} from "./Tree";
 
 declare var fabric: any;
 declare var socket: any;
+declare var canvas: any;
 
 declare global {
-    interface Window { game: any; socket: any, c1: Cell, c2: Cell, c3: Cell }
+    interface Window { game: any; socket: any, c1: Cell, c2: Cell, c3: Cell, runGameEngine: any, canvas: any }
 }
 
-window.socket = io('http://localhost:3001');
 
 function App() {
     const [currentFile, setCurrentFile] = useState('game-engine.js');
-    const [code, setCode] = useState(localStorage.getItem('code') || 'const foo = 123;');
+    const [code, setCode] = useState('');
     const [files, setFiles] = useState([]);
-    let canvas: any;
+
+    useEffect(() => {
+        onFileClick('game-engine.js');
+    }, []);
 
     useEffect(() => {
         const map: any = {};
@@ -40,26 +43,29 @@ function App() {
     }, [files]);
 
     useEffect(() => {
-        window.socket.on('DRAW_GAME', (data: string) => {
+        window.socket.on('DRAW_GAME', ({game, c1, c2, c3}) => {
             if(canvas) {
                 const origClear = canvas.clear;
                 canvas.clear = () => undefined;
                 canvas.getObjects().forEach((o: any, i) => {
                     canvas.remove(o);
                 });
-                canvas.loadFromJSON(data);
+                canvas.loadFromJSON(game);
                 canvas.getObjects().forEach((o: any) => {
                     o.set('selectable', false);
                 });
+                window.c1.setGameObject(c1);
+                window.c2.setGameObject(c2);
+                window.c3.setGameObject(c3);
                 canvas.clear = origClear;
             }
         });
-        canvas = new fabric.Canvas('gameCanvas');
-        canvas.selection = false;
-        canvas.setBackgroundColor({source: 'https://i.pinimg.com/originals/a3/ab/61/a3ab617780e86740e3c0b4053b760c99.jpg', repeat: 'repeat'}, function () {
-            canvas.renderAll();
+        window.canvas = new fabric.Canvas('gameCanvas');
+        window.canvas.selection = false;
+        window.canvas.setBackgroundColor({source: 'https://i.pinimg.com/originals/a3/ab/61/a3ab617780e86740e3c0b4053b760c99.jpg', repeat: 'repeat'}, function () {
+            window.canvas.renderAll();
         });
-        handleCanvasMovement(canvas);
+        handleCanvasMovement(window.canvas);
     }, []);
 
     const options = {
@@ -68,7 +74,7 @@ function App() {
 
     return (
         <div className="App">
-            <Tree onFileClick={onFileClick} currentFile={currentFile} files={files}/>
+            {/*<Tree onFileClick={onFileClick} currentFile={currentFile} files={files}/>*/}
             <MonacoEditor
                 width="650"
                 height="800"

@@ -41,7 +41,8 @@ export const objectCells: Array<SpawnObject> = [
             respawnTimeInMS: 10000,
             spawnCoordinates: [5, 5],
             name: 'Gold Ore',
-            isAttackable: false
+            isAttackable: false,
+            type: "LOOTABLE_OBJECT"
         }
     },
     {
@@ -62,7 +63,8 @@ export const objectCells: Array<SpawnObject> = [
             respawnTimeInMS: 10000,
             spawnCoordinates: [5, 5],
             name: 'Tree',
-            isAttackable: false
+            isAttackable: false,
+            type: "LOOTABLE_OBJECT"
         }
     }
 ];

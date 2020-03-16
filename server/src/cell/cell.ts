@@ -6,6 +6,7 @@ export interface CellConfig {
     dropList: Array<Drop>,
     expRange: [number, number],
     name: string,
+    type: 'MONSTER' | 'OBJECT' | 'LOOTABLE_OBJECT',
     attributes: CellAttributes,
     respawnTimeInMS: number,
     respawnReach: number,
@@ -30,14 +31,13 @@ export class Cell {
     public isMoving = false;
     public movementDegrees = 0;
     public items: Array<Item> = [];
-    public baseAttributes: CellAttributes;
-    public attributes: CellAttributes;
+    private rawAttributes: CellAttributes;
+    private attributes: {hp: number, energy: number, exp: number};
     private gameObject: any;
     private isAttacking = false;
 
     public constructor(protected instantiateGameObject: (cellConfig: CellConfig) => any, protected canvasSize: number, protected cellConfig: CellConfig) {
-        this.baseAttributes = {...cellConfig.attributes};
-        this.attributes = {...this.baseAttributes};
+        this.rawAttributes = {...cellConfig.attributes};
         this.respawn();
         this.initRegeneration();
     }
@@ -45,12 +45,13 @@ export class Cell {
     private initRegeneration() {
         setInterval(() => {
             if(! this.isDead() && ! this.isAttacking) {
-                const number = Math.round(this.attributes.regeneration / 2);
+                const baseAttributes = this.getBaseAttributes();
+                const number = Math.round(baseAttributes.regeneration / 2);
                 this.attributes.hp += number;
                 this.attributes.energy += number;
 
-                if(this.attributes.hp > this.baseAttributes.hp) this.attributes.hp = this.baseAttributes.hp;
-                if(this.attributes.energy > this.baseAttributes.energy) this.attributes.energy = this.baseAttributes.energy;
+                if(this.attributes.hp > baseAttributes.hp) this.attributes.hp = baseAttributes.hp;
+                if(this.attributes.energy > baseAttributes.energy) this.attributes.energy = baseAttributes.energy;
             }
         }, 3200);
     }
@@ -69,8 +70,24 @@ export class Cell {
         return 3;
     }
 
+    private getBaseAttributes() {
+        const attributes = {...this.rawAttributes};
+        const items = this.getEquippedItems();
+
+        items.forEach((i) => {
+            if(i.attributes) {
+                for (let key in i.attributes) {
+                    attributes[key] += i.attributes[key];
+                }
+            }
+        });
+
+        return attributes;
+    }
+
     public getAttributes() {
-        return {...this.attributes, level: this.getLevel()};
+        const baseAttributes = this.getBaseAttributes();
+        return {...baseAttributes, ...this.attributes, level: this.getLevel()};
     }
 
     public getItems() {
@@ -124,11 +141,15 @@ export class Cell {
     private respawn() {
         this.gameObject = this.instantiateGameObject(this.cellConfig);
         this.gameObject._cell = this;
+        this.gameObject._name = this.getName();
+        this.gameObject._type = this.cellConfig.type;
+        this.gameObject._isAttackable = this.isAttackable();
         this.resetAttributes();
     }
 
     private resetAttributes() {
-        this.attributes = {...this.baseAttributes, exp: this.attributes.exp};
+        const baseAttributes = this.getBaseAttributes();
+        this.attributes = {hp: baseAttributes.hp, energy: baseAttributes.energy, exp: this.attributes?.exp || 0};
     }
 
     public receiveDamage(cell: Cell, power: number): boolean {
@@ -164,6 +185,28 @@ export class Cell {
         this.movementDegrees = degrees;
     }
 
+    public getEquippedItems(): Array<Item> {
+        return this.items.filter((i) => i.isEquipped);
+    }
+
+    public useItem(itemId?: number, itemId2?: number) {
+        if(! itemId) return;
+
+        const item = this.items.find((i) => i.id === itemId);
+
+        if(item) {
+            if(item.canEquip) {
+                if(item.isEquipped) {
+                    item.isEquipped = false;
+                    if(this.socket) this.socket.emit('ITEM_UNEQUIPPED', {from: this.getName(), item})
+                } else {
+                    item.isEquipped = true;
+                    if(this.socket) this.socket.emit('ITEM_EQUIPPED', {from: this.getName(), item})
+                }
+            }
+        }
+    }
+
     public isDead() {
         return this.attributes.hp <= 0;
     }
@@ -176,13 +219,14 @@ export class Cell {
         if(! this.isMoving) return;
 
         const gameObject = this.getGameObject();
+        const baseAttributes = this.getBaseAttributes();
 
         const movement = {
             degrees: this.movementDegrees,
-            amount: this.attributes.speed
+            amount: baseAttributes.speed
         };
 
-        const angle = (movement.degrees - 90) / 180 * Math.PI;
+        const angle = movement.degrees / 180 * Math.PI;
         const left = gameObject.left + (movement.amount * Math.cos(angle));
         const top = gameObject.top + (movement.amount * Math.sin(angle));
 

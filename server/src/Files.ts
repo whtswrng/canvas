@@ -1,6 +1,9 @@
+import * as fs from 'fs';
+
 export interface File {
     name: string,
-    content: string
+    content: string,
+    path: string
 }
 
 export class Files {
@@ -11,7 +14,7 @@ export class Files {
     }
 
     public addFile(fileName: string) {
-        this.files.push({name: fileName, content: ''});
+        this.files.push({name: fileName, content: '', path: ''});
     }
 
     public loadFile(fileName: string) {
@@ -27,6 +30,7 @@ export class Files {
 
         if(file) {
             file.content = code;
+            fs.writeFileSync(file.path, code);
             return true;
         }
 

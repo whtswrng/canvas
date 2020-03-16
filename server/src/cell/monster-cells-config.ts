@@ -2,7 +2,7 @@ import {CellConfig} from "./cell";
 const fabric = require('fabric').fabric;
 import {ObjectCell} from "./object-cell";
 import {generateNumberBetween} from "../utils/between";
-import {createCoins, createGoldOre, createWood} from "../utils/items";
+import {createCoins, createGoldOre, createStick, createWood} from "../utils/items";
 import {MonsterCell} from "./monster-cell";
 
 export interface SpawnObject {
@@ -30,19 +30,20 @@ export const monsterCells: Array<SpawnObject> = [
                 radius: 20, fill: 'black', left: generateLeft(cellConfig), top: generateTop(cellConfig)
             }), canvasSize, cellConfig);
         },
-        count: 10,
+        count: 20,
         cellConfig: {
             attributes: {
                 ...defaultAttributes,
                 hp: 50
             },
-            dropList: [{dropChance: 750, item: createCoins(3)}],
+            dropList: [{dropChance: 750, item: createCoins(3)}, {dropChance: 1000, item: createStick()}],
             expRange: [20, 30],
             respawnReach: 1600,
             respawnTimeInMS: 10000,
             spawnCoordinates: [5, 5],
             name: 'Gluk',
-            isAttackable: true
+            isAttackable: true,
+            type: "MONSTER"
         }
     },
 ];
