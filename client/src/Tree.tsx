@@ -5,8 +5,8 @@ import './Tree.css';
 export const Tree = ({onFileClick, currentFile, files}) => {
     return (
         <div className={'tree'}>
-            {files.map((d) => <Item key={d.name} {...d} onFileClick={onFileClick}/>)}
-            <button onClick={addFile}>Přidat soubor</button>
+            {files.map((d) => <Item key={d.name} {...d} isActive={d.name === currentFile} onFileClick={onFileClick}/>)}
+            <button className={'tree-add-button'} onClick={addFile}><strong>+</strong></button>
         </div>
     );
 
@@ -19,14 +19,10 @@ export const Tree = ({onFileClick, currentFile, files}) => {
 
 };
 
-const Item = ({name, onFileClick}) => {
+const Item = ({name, onFileClick, isActive}) => {
     return (
-        <div className={'tree-item'}>
-            <span onClick={() => onFileClick(name)}>{name}</span>
-            <div className={'tree-item-actions'}>
-                <span><small>[E]</small></span>
-                <span><small>[X]</small></span>
-            </div>
+        <div className={`tree-item ${isActive ? 'active' : ''}`}  onClick={() => onFileClick(name)}>
+            <span>{name}</span>
         </div>
     );
 };

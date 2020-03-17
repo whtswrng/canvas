@@ -1,20 +1,23 @@
-import * as fs from 'fs';
-
 export interface File {
     name: string,
     content: string,
-    path: string
 }
 
 export class Files {
     private files: Array<File> = [];
 
     constructor(initialFiles: Array<File>) {
-        this.files = initialFiles;
+        this.initFiles(initialFiles);
     }
 
     public addFile(fileName: string) {
-        this.files.push({name: fileName, content: '', path: ''});
+        this.files.push({name: fileName, content: ''});
+    }
+
+    public initFiles(files?: Array<File>) {
+        if(files) {
+            this.files = files;
+        }
     }
 
     public loadFile(fileName: string) {
@@ -30,7 +33,6 @@ export class Files {
 
         if(file) {
             file.content = code;
-            fs.writeFileSync(file.path, code);
             return true;
         }
 

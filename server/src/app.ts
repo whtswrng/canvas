@@ -1,10 +1,11 @@
-import {Game} from "./game";
+import {Game, Item} from "./game";
 import {PlayerCell} from "./cell/player-cell";
 import {Files} from "./Files";
 import * as fs from 'fs';
-import {CellConfig} from "./cell/cell";
+import {CellAttributes, CellConfig} from "./cell/cell";
 import {shopItems} from "./utils/shop-items";
 import {craftItems} from "./utils/craft-items";
+import {PlayerPersistence} from "./player-persistence";
 const app = require('express')();
 const http = require('http').createServer(app);
 export let io = require('socket.io')(http);
@@ -14,7 +15,7 @@ const gameEngineFileContent = fs.readFileSync(__dirname + '/files/game-engine.js
 const connections = [];
 const game = new Game(connections);
 const canvasSize = game.getCanvasSize();
-const files = new Files([{name: 'game-engine.js', content: gameEngineFileContent, path: `${__dirname}/files/game-engine.js`}]);
+// const files = new Files([{name: 'game-engine.js', content: gameEngineFileContent, path: `${__dirname}/files/game-engine.js`}]);
 
 game.startGame();
 
@@ -40,21 +41,32 @@ io.on('connection', function(socket){
         expRange: [0, 0],
         isAttackable: true,
         respawnReach: 1600,
+        type: 'PLAYER',
         respawnTimeInMS: 10000,
         spawnCoordinates: [5, 5],
         name: '',
     };
+    const files = new Files([]);
     const c1 = new PlayerCell(() => new fabric.Circle({radius: 20, fill: 'white', left: 250, top: 250}), socket, canvasSize, {...cellConfig, name: 'C1'});
     const c2 = new PlayerCell(() => new fabric.Circle({radius: 20, fill: 'white', left: 250, top: 250}), socket, canvasSize, {...cellConfig, name: 'C2'});
-    // const c3 = new PlayerCell(() => new fabric.Circle({radius: 20, fill: 'white', left: 250, top: 250}), socket, canvasSize, cellConfig);
+    const playerPersistence = new PlayerPersistence([c1, c2], 'L0w', files);
+    const config = playerPersistence.getPlayerConfig();
+
+    if(config) {
+        console.log('Initializing a player from stored config!');
+        c1.initFromConfig(playerPersistence.getPlayerConfig().characters[0]);
+        c2.initFromConfig(playerPersistence.getPlayerConfig().characters[1]);
+    }
 
     game.addCell(c1);
     game.addCell(c2);
-    // game.addCell(c3);
     socket._c1 = c1;
     socket._c2 = c2;
-    // socket._c3 = c3;
     socket._files = files as Files;
+    socket._persistence = playerPersistence;
+
+
+
     console.log('a user connected, creating cells!');
 
     socket.emit('FILES_UPDATED', socket._files.getFiles());

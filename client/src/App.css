@@ -1,22 +1,83 @@
 body {
-    background: #2a2a2a;
+    background: #232121;
 }
 
 .canvas-container {
     border: 2px dashed #404040;
     float: right;
+    transition: opacity 0.2s;
+    flex-grow: 0.1;
+    position: absolute !important;
+    opacity: 0.1;
+    top: 15px;
+    right: 15px;
+    -webkit-box-shadow: 18px 11px 36px -7px rgba(0,0,0,0.75);
+    -moz-box-shadow: 18px 11px 36px -7px rgba(0,0,0,0.75);
+    box-shadow: 18px 11px 36px -7px rgba(0,0,0,0.75);
+}
+
+.editor-container {
+    width: 850px;
+    flex-grow: 0.6;
+}
+
+.editor-container .header {
+    display: flex;
+    padding: 20px;
+    background-color: #1e1e1e;
+    width: 369px;
+}
+
+.editor-container .header input {
+    font-family: inherit;
+    width: 200px;
+    border: 0;
+    border-bottom: 2px solid #9b9b9b;
+    outline: 0;
+    font-size: 1.3rem;
+    color: #fff;
+    padding: 7px 0;
+    background: transparent;
+    transition: border-color 0.2s;
+}
+
+.editor-container .header button {
+    float: right;
+    font-size: 14px;
+    width: 80px;
+    height: 40px;
+}
+
+.canvas-container:hover {
+    opacity: 1;
 }
 
 .App {
-    width: 1150px;
-    margin-left: auto;
-    margin-right: auto;
     display: flex;
     flex-direction: row;
+    height: 100vh;
 }
 
 .react-monaco-editor-container {
 }
 
-#gameCanvas {
+button {
+    user-select: none;
+    width: 90%;
+    color: grey;
+    font-size: 30px;
+    cursor: pointer;
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-top: 10px;
+    background-color: #2a2929;
+    border: 1px solid #1e1c1c;
+    -webkit-box-shadow: 18px 11px 36px -7px rgba(0,0,0,0.75);
+    -moz-box-shadow: 18px 11px 36px -7px rgba(0,0,0,0.75);
+    box-shadow: 18px 11px 36px -7px rgba(0,0,0,0.75);
 }
+
+button:hover {
+    background-color: #353333;
+}
+

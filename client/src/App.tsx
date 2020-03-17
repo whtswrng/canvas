@@ -14,11 +14,15 @@ declare global {
     interface Window { game: any; socket: any, c1: Cell, c2: Cell, c3: Cell, runGameEngine: any, canvas: any }
 }
 
-
 function App() {
     const [currentFile, setCurrentFile] = useState('game-engine.js');
+    const [newFileName, setNewFileName] = useState(currentFile);
     const [code, setCode] = useState('');
     const [files, setFiles] = useState([]);
+
+    useEffect(() => {
+        setNewFileName(currentFile);
+    }, [currentFile]);
 
     useEffect(() => {
         onFileClick('game-engine.js');
@@ -30,7 +34,7 @@ function App() {
             map[e.keyCode] = e.type == 'keydown';
             if(map['13'] && map['16']) {
                 e.preventDefault();
-                eval(code);
+                eval(`(async () => {${code}})()`);
                 window.socket.emit('CHANGE_FILE', {fileName: currentFile, code});
             }
         };
@@ -60,7 +64,7 @@ function App() {
                 canvas.clear = origClear;
             }
         });
-        window.canvas = new fabric.Canvas('gameCanvas');
+        window.canvas = new fabric.Canvas('game-canvas');
         window.canvas.selection = false;
         window.canvas.setBackgroundColor({source: 'https://i.pinimg.com/originals/a3/ab/61/a3ab617780e86740e3c0b4053b760c99.jpg', repeat: 'repeat'}, function () {
             window.canvas.renderAll();
@@ -74,17 +78,24 @@ function App() {
 
     return (
         <div className="App">
-            {/*<Tree onFileClick={onFileClick} currentFile={currentFile} files={files}/>*/}
-            <MonacoEditor
-                width="650"
-                height="800"
-                language="javascript"
-                theme="vs-dark"
-                value={code}
-                options={options}
-                onChange={setCode}
-            />
-            <canvas id="gameCanvas" width="500" height="500"></canvas>
+            <Tree onFileClick={onFileClick} currentFile={currentFile} files={files}/>
+            <div className={'editor-container'}>
+                <div className={'header'}>
+                    <input placeholder={"foo-bar.js"} onChange={(e) => setNewFileName(e.target.value)} value={newFileName}/>
+                    <button>Save</button>
+                    <button>Delete</button>
+                </div>
+                <MonacoEditor
+                    width="100%"
+                    height="100%"
+                    language="javascript"
+                    theme="vs-dark"
+                    value={code}
+                    options={options}
+                    onChange={setCode}
+                />
+            </div>
+            <canvas id="game-canvas" width={450} height={400}></canvas>
         </div>
     );
 

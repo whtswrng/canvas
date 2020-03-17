@@ -26,7 +26,7 @@ export const objectCells: Array<SpawnObject> = [
     {
         createObject: (cellConfig: CellConfig, canvasSize) => {
             return new ObjectCell(() => new fabric.Circle({
-                radius: 10 + 1, fill: 'gold', left: generateLeft(cellConfig), top: generateTop(cellConfig)
+                radius: 13, fill: 'bronze', left: generateLeft(cellConfig), top: generateTop(cellConfig)
             }), canvasSize, cellConfig);
         },
         count: 10,
@@ -39,7 +39,51 @@ export const objectCells: Array<SpawnObject> = [
             expRange: [0, 0],
             respawnReach: 1600,
             respawnTimeInMS: 10000,
-            spawnCoordinates: [5, 5],
+            spawnCoordinates: [15, 15],
+            name: 'Bronze Ore',
+            isAttackable: false,
+            type: "LOOTABLE_OBJECT"
+        }
+    },
+    {
+        createObject: (cellConfig: CellConfig, canvasSize) => {
+            return new ObjectCell(() => new fabric.Circle({
+                radius: 20, fill: 'silver', left: generateLeft(cellConfig), top: generateTop(cellConfig)
+            }), canvasSize, cellConfig);
+        },
+        count: 14,
+        cellConfig: {
+            attributes: {
+                ...defaultAttributes,
+                hp: 50
+            },
+            dropList: [{dropChance: 750, item: createGoldOre(2)}],
+            expRange: [0, 0],
+            respawnReach: 1600,
+            respawnTimeInMS: 10000,
+            spawnCoordinates: [2500, 2500],
+            name: 'Silver Ore',
+            isAttackable: false,
+            type: "LOOTABLE_OBJECT"
+        }
+    },
+    {
+        createObject: (cellConfig: CellConfig, canvasSize) => {
+            return new ObjectCell(() => new fabric.Circle({
+                radius: 30, fill: 'gold', left: generateLeft(cellConfig), top: generateTop(cellConfig)
+            }), canvasSize, cellConfig);
+        },
+        count: 10,
+        cellConfig: {
+            attributes: {
+                ...defaultAttributes,
+                hp: 50
+            },
+            dropList: [{dropChance: 750, item: createGoldOre(2)}],
+            expRange: [0, 0],
+            respawnReach: 1600,
+            respawnTimeInMS: 10000,
+            spawnCoordinates: [5000, 5000],
             name: 'Gold Ore',
             isAttackable: false,
             type: "LOOTABLE_OBJECT"

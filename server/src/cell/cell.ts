@@ -5,12 +5,13 @@ import {shopItems} from "../utils/shop-items";
 import {craftItems} from "../utils/craft-items";
 import {doesHaveAllRequiredItems} from "../utils/does-have-all-required-items";
 import {createWood} from "../utils/items";
+import {PersistentCharacter, PlayerConfig} from "../player-persistence";
 
 export interface CellConfig {
     dropList: Array<Drop>,
     expRange: [number, number],
     name: string,
-    type: 'MONSTER' | 'OBJECT' | 'LOOTABLE_OBJECT',
+    type: 'MONSTER' | 'OBJECT' | 'LOOTABLE_OBJECT' | 'PLAYER',
     attributes: CellAttributes,
     respawnTimeInMS: number,
     respawnReach: number,
@@ -35,7 +36,7 @@ export class Cell {
     public isMoving = false;
     public movementDegrees = 0;
     public items: Array<Item> = [];
-    private rawAttributes: CellAttributes;
+    public rawAttributes: CellAttributes;
     private attributes: {hp: number, energy: number, exp: number};
     private gameObject: any;
     private isAttacking = false;
@@ -44,6 +45,17 @@ export class Cell {
         this.rawAttributes = {...cellConfig.attributes};
         this.respawn();
         this.initRegeneration();
+    }
+
+    public initFromConfig(playerConfig: PersistentCharacter): void {
+        this.rawAttributes = {
+            ...this.rawAttributes,
+            farm: playerConfig.attributes.farm,
+            craft: playerConfig.attributes.craft,
+            enchant: playerConfig.attributes.enchant,
+            exp: playerConfig.exp
+        };
+        this.items = playerConfig.items;
     }
 
     private initRegeneration() {

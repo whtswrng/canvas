@@ -1,0 +1,31 @@
+{
+  "name": "Ferda",
+  "files": [
+    {
+      "name": "foo",
+      "content": "lalala"
+    }
+  ],
+  "characters": [
+    {
+      "name": "c1",
+      "items": [],
+      "exp": 23423,
+      "attributes": {
+        "farm": 2,
+        "enchant": 2,
+        "craft": 2
+      }
+    },
+    {
+      "name": "c1",
+      "items": [],
+      "exp": 23423,
+      "attributes": {
+        "farm": 2,
+        "enchant": 2,
+        "craft": 2
+      }
+    }
+  ]
+}

@@ -13,7 +13,7 @@ export const CONFIG = {
     attackingInterval: 1200
 };
 
-const canvasSize = 5000;
+const canvasSize = 4000;
 const canvas = new fabric.StaticCanvas(null, {width: canvasSize, height: canvasSize});
 canvas.selection = false;
 let localCanvas = new fabric.StaticCanvas(null, {width: canvasSize, height: canvasSize});
