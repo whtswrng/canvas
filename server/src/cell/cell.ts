@@ -1,6 +1,10 @@
 import {CONFIG, Drop, Item} from "../game";
 import {generateNumberBetween} from "../utils/between";
 import {generateItemsFromDropList} from "../utils/generate-drop-list";
+import {shopItems} from "../utils/shop-items";
+import {craftItems} from "../utils/craft-items";
+import {doesHaveAllRequiredItems} from "../utils/does-have-all-required-items";
+import {createWood} from "../utils/items";
 
 export interface CellConfig {
     dropList: Array<Drop>,
@@ -47,23 +51,25 @@ export class Cell {
             if(! this.isDead() && ! this.isAttacking) {
                 const baseAttributes = this.getBaseAttributes();
                 const number = Math.round(baseAttributes.regeneration / 2);
-                this.attributes.hp += number;
-                this.attributes.energy += number;
-
-                if(this.attributes.hp > baseAttributes.hp) this.attributes.hp = baseAttributes.hp;
-                if(this.attributes.energy > baseAttributes.energy) this.attributes.energy = baseAttributes.energy;
+                this.modifyAttribute('hp', number);
+                this.modifyAttribute('energy', number);
             }
         }, 3200);
+        this.addItems([createWood(3)]);
     }
 
     public getGameObject() {
         return this.gameObject;
     }
 
+    public getType() {
+        return this.cellConfig.type;
+    }
+
     public getLevel() {
-        if(this.attributes.exp < 1000) {
+        if(this.attributes.exp < 60) {
             return 1;
-        } else if(this.attributes.exp >= 1000 && this.attributes.exp <= 2500) {
+        } else if(this.attributes.exp >= 60 && this.attributes.exp <= 150) {
             return 2;
         }
 
@@ -123,7 +129,15 @@ export class Cell {
     }
 
     public addReward(items: Array<Item>, exp: number) {
+        const oldLevel = this.getLevel();
         this.attributes.exp += exp;
+        this.addItems(items);
+        if(this.getLevel() !== oldLevel && this.socket) {
+            this.socket.emit('LEVEL_UP', {name: this.getName(), level: this.getLevel()});
+        }
+    }
+
+    private addItems(items: Array<Item>) {
         items.forEach((i) => {
             if(i.stackable) {
                 const existingItem = this.items.find((_i) => _i.name === i.name);
@@ -189,13 +203,87 @@ export class Cell {
         return this.items.filter((i) => i.isEquipped);
     }
 
+    private tryToObtainItem(items: Array<Item>, itemId: number) {
+        const item = items.find((i) => i.id === itemId);
+
+        if(item && item.requirements) {
+            if(doesHaveAllRequiredItems(itemId, this.getItems(), items)) {
+                this.addItems([item]);
+                this.removeItems(item.requirements);
+                if(this.socket) this.socket.emit('INFO', `Player ${this.getName()} has obtained a new item ${item.name}`);
+            } else {
+                if(this.socket) this.socket.emit('WARNING', `Player ${this.getName()} does not have all necessary items for obtaining a ${item.name}`);
+            }
+        } else {
+            if(this.socket) this.socket.emit('WARNING', `Item with id ${itemId} does not exist!`);
+        }
+    }
+
+    public craftItem(itemId: number) {
+        const item = craftItems.find((i) => i.id === itemId);
+
+        if(item) {
+            if(item.level > this.getLevel()) {
+                return this.socket && this.socket.emit('WARNING', `Player ${this.getName()} does not have required level for item ${item.name}.`);
+            }
+            if(this.getAttributes().craft < item.level) {
+                return this.socket && this.socket.emit('WARNING', `Player ${this.getName()} does not have required craft level for item ${item.name}.`);
+            }
+            this.tryToObtainItem(craftItems, itemId);
+        }
+    }
+
+    public buyItem(itemId: number) {
+        this.tryToObtainItem(shopItems, itemId);
+    }
+
+    private removeItems(itemsToRemove: Array<{amount: number, itemName: string}>) {
+        itemsToRemove.forEach((itemToBeRemoved) => {
+            const item = this.getItems().find((i) => i.name === itemToBeRemoved.itemName);
+
+            if(item) {
+                this.removeItem(item.id, itemToBeRemoved.amount);
+            }
+        });
+    }
+
+    public modifyAttribute(attribute: string, amount: number) {
+        const baseAttributes = this.getBaseAttributes();
+        let newAmount = this.attributes[attribute] + amount;
+
+        if(newAmount > baseAttributes[attribute]) newAmount = baseAttributes[attribute];
+
+        this.attributes[attribute] = newAmount;
+    }
+
+    private removeItem(itemId: number, amount: number = 1): void {
+        const item = this.getItems().find((i) => i.id === itemId);
+
+        if(item) {
+            console.log('Trying to remove: ', item.name, item);
+            if(item.stackable && item.amount > amount) {
+                item.amount -= amount;
+            } else {
+                this.items = this.items.filter((i) => i.id !== itemId);
+            }
+        }
+    }
+
     public useItem(itemId?: number, itemId2?: number) {
         if(! itemId) return;
 
         const item = this.items.find((i) => i.id === itemId);
 
         if(item) {
-            if(item.canEquip) {
+            if(item.canUse) {
+                if(item.attributes) {
+                    for (let key in item.attributes) {
+                        this.modifyAttribute(key, item.attributes[key])
+                    }
+                }
+                this.removeItem(itemId, 1);
+                if(this.socket) this.socket.emit('ITEM_USED', {item});
+            } else if(item.canEquip) {
                 if(item.isEquipped) {
                     item.isEquipped = false;
                     if(this.socket) this.socket.emit('ITEM_UNEQUIPPED', {from: this.getName(), item})

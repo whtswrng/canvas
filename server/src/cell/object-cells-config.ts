@@ -57,7 +57,7 @@ export const objectCells: Array<SpawnObject> = [
                 ...defaultAttributes,
                 hp: 50
             },
-            dropList: [{dropChance: 100, item: createWood(3)}],
+            dropList: [{dropChance: 1000, item: createWood(3)}],
             expRange: [0, 0],
             respawnReach: 2400,
             respawnTimeInMS: 10000,

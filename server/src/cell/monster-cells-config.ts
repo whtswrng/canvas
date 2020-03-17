@@ -2,7 +2,7 @@ import {CellConfig} from "./cell";
 const fabric = require('fabric').fabric;
 import {ObjectCell} from "./object-cell";
 import {generateNumberBetween} from "../utils/between";
-import {createCoins, createGoldOre, createStick, createWood} from "../utils/items";
+import {createCoins, createGoldOre, createSmallEnergyDrink, createStick, createWood} from "../utils/items";
 import {MonsterCell} from "./monster-cell";
 
 export interface SpawnObject {
@@ -36,7 +36,7 @@ export const monsterCells: Array<SpawnObject> = [
                 ...defaultAttributes,
                 hp: 50
             },
-            dropList: [{dropChance: 750, item: createCoins(3)}, {dropChance: 1000, item: createStick()}],
+            dropList: [{dropChance: 750, item: createCoins(3)}, {dropChance: 200, item: createStick()}, {dropChance: 1000, item: createSmallEnergyDrink(1)}],
             expRange: [20, 30],
             respawnReach: 1600,
             respawnTimeInMS: 10000,

@@ -26,13 +26,16 @@ export interface ItemAttributes extends CellAttributes {
 export interface Item {
     id: number,
     name: string,
+    level: number,
     amount: number,
     stackable: boolean,
-    attributes?: ItemAttributes,
+    attributes?: Partial<ItemAttributes>,
     quality: 'COMMON' | 'RARE' | 'EPIC',
-    canEquip: boolean,
+    canEquip?: boolean,
+    canUse?: boolean,
     isEquipped?: boolean,
-    type: 'MATERIAL' | 'HELMET' | 'ARMOR' | 'WEAPON' | 'HANDS' | 'BOOTS' | 'OTHER'
+    type: 'MATERIAL' | 'HELMET' | 'ARMOR' | 'WEAPON' | 'HANDS' | 'BOOTS' | 'OTHER' | 'POTION',
+    requirements?: Array<{amount: number, itemName: string}>
 }
 
 export interface Drop {
@@ -62,7 +65,6 @@ export class Game {
                     game: renderGame(connection),
                     c1: connection._c1.getGameObject(),
                     c2: connection._c2.getGameObject(),
-                    c3: connection._c3.getGameObject()
                 });
             }
             await waitFor(45);
@@ -72,7 +74,7 @@ export class Game {
         function renderGame(socket) {
             localCanvas.clear();
             canvas.getObjects().forEach((o) => {
-                for (let j = 1; j <= 3; j++) {
+                for (let j = 1; j <= 2; j++) {
                     const cell = socket['_c' + j] as PlayerCell;
                     const gameObject = cell.getGameObject();
                     if (Math.abs(o.left - gameObject.left) <= CONFIG.visibilityRadius && Math.abs(o.top - gameObject.top) <= CONFIG.visibilityRadius) {
@@ -105,7 +107,6 @@ export class Game {
 
             const targetCell = o._cell as Cell;
 
-            console.log('FOUND TARGET!!', targetCell.isAttackable());
             if (attackAttribute === 'power') {
                 return targetCell.isAttackable();
             } else {
@@ -121,10 +122,17 @@ export class Game {
 
                 if (from.socket) {
                     from.socket.emit('TARGET_HIT', {
-                        target: targetCell.getName(),
-                        from: from.getName(),
+                        target: {
+                            attributes: targetCell.getAttributes(),
+                            name: targetCell.getName(),
+                            type: targetCell.getType(),
+                        },
+                        from: {
+                            name: from.getName(),
+                            attributes: from.getAttributes(),
+                            type: targetCell.getType(),
+                        },
                         damage,
-                        attributes: targetCell.getAttributes()
                     });
                 }
 
@@ -133,11 +141,20 @@ export class Game {
                     targetCell.planRespawn(() => canvas.add(targetCell.getGameObject()));
                     if (from.socket) {
                         const dropItems = targetCell.generateDropItems();
-                        from.addReward(dropItems, targetCell.generateExp());
+                        const exp = targetCell.generateExp();
+                        from.addReward(dropItems, exp);
                         from.socket.emit('TARGET_DEAD', {
-                            target: targetCell.getName(),
-                            from: from.getName(),
-                            attributes: targetCell.getAttributes(),
+                            target: {
+                                attributes: targetCell.getAttributes(),
+                                name: targetCell.getName(),
+                                type: targetCell.getType(),
+                            },
+                            from: {
+                                name: from.getName(),
+                                attributes: from.getAttributes(),
+                                type: targetCell.getType(),
+                            },
+                            exp,
                             drop: dropItems
                         });
                     }
@@ -184,7 +201,7 @@ export class Game {
             for (let i = 0; i < connections.length; i++) {
                 const socket = connections[i];
 
-                for (let j = 1; j <= 3; j++) {
+                for (let j = 1; j <= 2; j++) {
                     const cell = socket['_c' + j] as PlayerCell;
                     cell.tryToMove();
                 }

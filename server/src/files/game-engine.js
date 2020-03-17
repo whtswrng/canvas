@@ -1,20 +1,24 @@
 
-// c2.stop()
 
-
-harvestAllObjects(c2);
-
-// c2.stop();
+killAllMonsters(c2);
+harvestAllObjects(c1);
 
 
 async function harvestAllObjects(c) {
-    const objects = getLootableObjects(c)
+    const objects = c.getCloseLootableObjects(c)
 
     for(let i=0;i < objects.length; i++) {
-        await c.harvestObject(objects[i])
+        await c.harvest(objects[i])
     }
 }
 
-function getLootableObjects(c) {
-    return c.getObjectsNearby().filter((o) => o.type === 'LOOTABLE_OBJECT');
+async function killAllMonsters(c) {
+    const objects = c.getCloseMonsters(c)
+
+    for(let i=0;i < objects.length; i++) {
+        await c.attack(objects[i])
+    }
+
 }
+
+

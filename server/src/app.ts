@@ -3,6 +3,8 @@ import {PlayerCell} from "./cell/player-cell";
 import {Files} from "./Files";
 import * as fs from 'fs';
 import {CellConfig} from "./cell/cell";
+import {shopItems} from "./utils/shop-items";
+import {craftItems} from "./utils/craft-items";
 const app = require('express')();
 const http = require('http').createServer(app);
 export let io = require('socket.io')(http);
@@ -40,18 +42,18 @@ io.on('connection', function(socket){
         respawnReach: 1600,
         respawnTimeInMS: 10000,
         spawnCoordinates: [5, 5],
-        name: 'Player LOL',
+        name: '',
     };
-    const c1 = new PlayerCell(() => new fabric.Circle({radius: 20, fill: 'white', left: 250, top: 250}), socket, canvasSize, cellConfig);
-    const c2 = new PlayerCell(() => new fabric.Circle({radius: 20, fill: 'white', left: 250, top: 250}), socket, canvasSize, cellConfig);
-    const c3 = new PlayerCell(() => new fabric.Circle({radius: 20, fill: 'white', left: 250, top: 250}), socket, canvasSize, cellConfig);
+    const c1 = new PlayerCell(() => new fabric.Circle({radius: 20, fill: 'white', left: 250, top: 250}), socket, canvasSize, {...cellConfig, name: 'C1'});
+    const c2 = new PlayerCell(() => new fabric.Circle({radius: 20, fill: 'white', left: 250, top: 250}), socket, canvasSize, {...cellConfig, name: 'C2'});
+    // const c3 = new PlayerCell(() => new fabric.Circle({radius: 20, fill: 'white', left: 250, top: 250}), socket, canvasSize, cellConfig);
 
     game.addCell(c1);
     game.addCell(c2);
-    game.addCell(c3);
+    // game.addCell(c3);
     socket._c1 = c1;
     socket._c2 = c2;
-    socket._c3 = c3;
+    // socket._c3 = c3;
     socket._files = files as Files;
     console.log('a user connected, creating cells!');
 
@@ -115,6 +117,34 @@ io.on('connection', function(socket){
         const socketCell = socket['_' + cell] as PlayerCell;
         if(socketCell) {
             ack(socketCell.getAttributes());
+        }
+    });
+
+    socket.on('BUY_ITEM', ({cell, itemId}, ack) => {
+        const socketCell = socket['_' + cell] as PlayerCell;
+        if(socketCell) {
+            socketCell.buyItem(itemId);
+        }
+    });
+
+    socket.on('CRAFT_ITEM', ({cell, itemId}, ack) => {
+        const socketCell = socket['_' + cell] as PlayerCell;
+        if(socketCell) {
+            socketCell.craftItem(itemId);
+        }
+    });
+
+    socket.on('GET_SHOP_ITEMS', ({cell}, ack) => {
+        const socketCell = socket['_' + cell] as PlayerCell;
+        if(socketCell) {
+            ack(shopItems);
+        }
+    });
+
+    socket.on('GET_CRAFT_ITEMS', ({cell}, ack) => {
+        const socketCell = socket['_' + cell] as PlayerCell;
+        if(socketCell) {
+            ack(craftItems);
         }
     });
 
