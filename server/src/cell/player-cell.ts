@@ -6,4 +6,7 @@ export class PlayerCell extends Cell {
         super(instantiateGameObject, canvasSize, cellConfig);
     }
 
+    public setSocket(socket: any) {
+        this.socket = socket;
+    }
 }

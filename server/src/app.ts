@@ -16,6 +16,7 @@ const connections = [];
 const game = new Game(connections);
 const canvasSize = game.getCanvasSize();
 // const files = new Files([{name: 'game-engine.js', content: gameEngineFileContent, path: `${__dirname}/files/game-engine.js`}]);
+const playerPersistenceMap: any = {};
 
 game.startGame();
 
@@ -24,7 +25,12 @@ app.get('/', function(req, res){
 });
 
 io.on('connection', function(socket){
+    socket.on('disconnect', function() {
+        const i = connections.indexOf(socket);
+        connections.splice(i, 1);
+    });
     connections.push(socket);
+    const playerName = 'l0w';
     const cellConfig: CellConfig = {
         attributes: {
             farm: 10,
@@ -46,30 +52,54 @@ io.on('connection', function(socket){
         spawnCoordinates: [5, 5],
         name: '',
     };
-    const files = new Files([]);
-    const c1 = new PlayerCell(() => new fabric.Circle({radius: 20, fill: 'white', left: 250, top: 250}), socket, canvasSize, {...cellConfig, name: 'C1'});
-    const c2 = new PlayerCell(() => new fabric.Circle({radius: 20, fill: 'white', left: 250, top: 250}), socket, canvasSize, {...cellConfig, name: 'C2'});
-    const playerPersistence = new PlayerPersistence([c1, c2], 'L0w', files);
-    const config = playerPersistence.getPlayerConfig();
 
-    if(config) {
-        console.log('Initializing a player from stored config!');
-        c1.initFromConfig(playerPersistence.getPlayerConfig().characters[0]);
-        c2.initFromConfig(playerPersistence.getPlayerConfig().characters[1]);
+    if(playerPersistenceMap[playerName]) {
+        const playerPersistence: PlayerPersistence = playerPersistenceMap[playerName];
+        const [c1, c2] = playerPersistence.getCells();
+        initPlayer(playerPersistence, c1, c2, playerPersistence.getFiles());
+    } else {
+        const files = new Files([]);
+        const c1 = new PlayerCell(() => new fabric.Circle({radius: 20, fill: 'white', left: 250, top: 250}), socket, canvasSize, {...cellConfig, name: 'C1'});
+        const c2 = new PlayerCell(() => new fabric.Circle({radius: 20, fill: 'white', left: 250, top: 250}), socket, canvasSize, {...cellConfig, name: 'C2'});
+        const playerPersistence = new PlayerPersistence([c1, c2], 'L0w', files);
+        initPlayer(playerPersistence, c1, c2, files);
+        playerPersistenceMap[playerName] = playerPersistence;
     }
 
-    game.addCell(c1);
-    game.addCell(c2);
-    socket._c1 = c1;
-    socket._c2 = c2;
-    socket._files = files as Files;
-    socket._persistence = playerPersistence;
+    function initPlayer(playerPersistence: PlayerPersistence, c1: PlayerCell, c2: PlayerCell, files: Files) {
+        const config = playerPersistence.getPlayerConfig();
+
+        if (config) {
+            console.log('Initializing a player from stored config!');
+            c1.initFromConfig(playerPersistence.getPlayerConfig().characters[0]);
+            c2.initFromConfig(playerPersistence.getPlayerConfig().characters[1]);
+        }
+
+        c1.setSocket(socket);
+        c2.setSocket(socket);
+        game.addCell(c1);
+        game.addCell(c2);
+        socket._c1 = c1;
+        socket._c2 = c2;
+        socket._files = files as Files;
+        socket._persistence = playerPersistence;
+    }
 
 
 
     console.log('a user connected, creating cells!');
 
     socket.emit('FILES_UPDATED', socket._files.getFiles());
+
+    socket.on('SAVE_FILE_NAME', ({oldName, newName}) => {
+        socket._files.changeFileName(oldName, newName);
+        socket.emit('FILES_UPDATED', socket._files.getFiles());
+    });
+
+    socket.on('DELETE_FILE', ({fileName}) => {
+        socket._files.deleteFile(fileName);
+        socket.emit('FILES_UPDATED', socket._files.getFiles());
+    });
 
     socket.on('ADD_FILE', (fileName) => {
         socket._files.addFile(fileName);

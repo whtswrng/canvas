@@ -1,7 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import './App.css';
 import MonacoEditor from 'react-monaco-editor';
-import io from 'socket.io-client';
 import './utils/Game';
 import {Cell} from "./utils/Game";
 import {Tree} from "./Tree";
@@ -15,7 +14,7 @@ declare global {
 }
 
 function App() {
-    const [currentFile, setCurrentFile] = useState('game-engine.js');
+    const [currentFile, setCurrentFile] = useState('');
     const [newFileName, setNewFileName] = useState(currentFile);
     const [code, setCode] = useState('');
     const [files, setFiles] = useState([]);
@@ -43,8 +42,25 @@ function App() {
     useEffect(() => {
         window.socket.on('FILES_UPDATED', (files) => {
             setFiles(files);
-        })
-    }, [files]);
+
+            if(files.find((f) => f.name === currentFile)) {
+                window.socket.emit('LOAD_FILE', currentFile, (code) => {
+                    setCurrentFile(currentFile);
+                    setCode(code);
+                });
+            } else {
+                console.log('loading default file');
+                window.socket.emit('LOAD_FILE', files[0].name, (code) => {
+                    setCurrentFile(files[0].name);
+                    setCode(code);
+                });
+            }
+        });
+
+        return () => {
+            window.socket.off('FILES_UPDATED');
+        }
+    }, [currentFile, files]);
 
     useEffect(() => {
         window.socket.on('DRAW_GAME', ({game, c1, c2, c3}) => {
@@ -82,8 +98,8 @@ function App() {
             <div className={'editor-container'}>
                 <div className={'header'}>
                     <input placeholder={"foo-bar.js"} onChange={(e) => setNewFileName(e.target.value)} value={newFileName}/>
-                    <button>Save</button>
-                    <button>Delete</button>
+                    <button onClick={saveFileName}>Save</button>
+                    <button onClick={deleteCurrentFile}>Delete</button>
                 </div>
                 <MonacoEditor
                     width="100%"
@@ -98,6 +114,19 @@ function App() {
             <canvas id="game-canvas" width={450} height={400}></canvas>
         </div>
     );
+
+    function saveFileName() {
+        if(window.confirm('Do you really wanna SAVE this file name?')) {
+            setCurrentFile(newFileName);
+            window.socket.emit('SAVE_FILE_NAME', {oldName: currentFile, newName: newFileName});
+        }
+    }
+
+    function deleteCurrentFile() {
+        if(window.confirm('Do you really wanna REMOVE this file?')) {
+            window.socket.emit('DELETE_FILE', {fileName: currentFile});
+        }
+    }
 
     function onFileClick(fileName: string) {
         window.socket.emit('LOAD_FILE', fileName, (code) => {

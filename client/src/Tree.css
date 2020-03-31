@@ -1,5 +1,6 @@
 .tree {
-    min-width: 15px;
+    /*min-width: 15px;*/
+    min-width: 270px;
     max-width: 15px;
     transition: min-width 0.4s, width 0.2s;
     flex-grow: 0.1;
@@ -8,12 +9,12 @@
     -moz-box-shadow: 18px 11px 36px -7px rgba(0,0,0,0.75);
     box-shadow: 18px 11px 36px -7px rgba(0,0,0,0.75);
     color: #d0d0d0;
-    opacity: 0;
+    /*opacity: 0;*/
 }
 
 .tree:hover {
-    min-width: 270px;
-    opacity: 1;
+    /*min-width: 270px;*/
+    /*opacity: 1;*/
 }
 
 .tree-item {

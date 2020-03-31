@@ -26,7 +26,7 @@ export const objectCells: Array<SpawnObject> = [
     {
         createObject: (cellConfig: CellConfig, canvasSize) => {
             return new ObjectCell(() => new fabric.Circle({
-                radius: 13, fill: 'bronze', left: generateLeft(cellConfig), top: generateTop(cellConfig)
+                radius: 13, fill: '#cd7f32', left: generateLeft(cellConfig), top: generateTop(cellConfig)
             }), canvasSize, cellConfig);
         },
         count: 10,
@@ -48,7 +48,7 @@ export const objectCells: Array<SpawnObject> = [
     {
         createObject: (cellConfig: CellConfig, canvasSize) => {
             return new ObjectCell(() => new fabric.Circle({
-                radius: 20, fill: 'silver', left: generateLeft(cellConfig), top: generateTop(cellConfig)
+                radius: 20, fill: '#C0C0C0', left: generateLeft(cellConfig), top: generateTop(cellConfig)
             }), canvasSize, cellConfig);
         },
         count: 14,
@@ -70,7 +70,7 @@ export const objectCells: Array<SpawnObject> = [
     {
         createObject: (cellConfig: CellConfig, canvasSize) => {
             return new ObjectCell(() => new fabric.Circle({
-                radius: 30, fill: 'gold', left: generateLeft(cellConfig), top: generateTop(cellConfig)
+                radius: 30, fill: '#FFD700', left: generateLeft(cellConfig), top: generateTop(cellConfig)
             }), canvasSize, cellConfig);
         },
         count: 10,

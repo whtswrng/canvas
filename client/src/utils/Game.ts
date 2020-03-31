@@ -28,14 +28,18 @@ window.game = {
     }
 };
 
+
 export class Cell {
     private gameObject;
+    private movingInterval;
+    private attackingInterval;
 
     constructor(private cell: string) {
 
     }
 
     public move(degrees: number) {
+        this.stopAllIntervals();
         window.socket.emit('MOVE', {cell: this.cell, degrees});
     }
 
@@ -46,11 +50,11 @@ export class Cell {
     public attack(o) {
         return new Promise((res) => {
             this.moveToObject(o);
-            const interval = setInterval(async() => {
+            this.movingInterval = setInterval(async() => {
                 if(this.isCloseTo(o)) {
-                    clearInterval(interval);
+                    clearInterval(this.movingInterval);
                     this.stop();
-                    await penetrateObject('emitAttack', this, o);
+                    await this.penetrateObject('emitAttack', o);
                     res();
                 }
             }, 600);
@@ -60,11 +64,11 @@ export class Cell {
     public harvest(o) {
         return new Promise((res) => {
             this.moveToObject(o);
-            const interval = setInterval(async() => {
+            this.movingInterval = setInterval(async() => {
                 if(this.isCloseTo(o)) {
-                    clearInterval(interval);
+                    clearInterval(this.movingInterval);
                     this.stop();
-                    await penetrateObject('emitHarvest', this, o);
+                    await this.penetrateObject('emitHarvest', o);
                     res();
                 }
             }, 600);
@@ -81,7 +85,13 @@ export class Cell {
     }
 
     public stop() {
+        this.stopAllIntervals();
         window.socket.emit('STOP', {cell: this.cell});
+    }
+
+    private stopAllIntervals() {
+        clearInterval(this.movingInterval);
+        clearInterval(this.attackingInterval);
     }
 
     public emitAttack() {
@@ -155,12 +165,12 @@ export class Cell {
         });
     }
 
-    public getCloseMonsters(c) {
-        return c.getCloseObjects().filter((o) => o.type === 'MONSTER');
+    public getMonsters() {
+        return this.getCloseObjects().filter((o) => o.type === 'MONSTER');
     }
 
-    public getCloseLootableObjects(c) {
-        return c.getCloseObjects().filter((o) => o.type === 'LOOTABLE_OBJECT');
+    public getLootableObjects() {
+        return this.getCloseObjects().filter((o) => o.type === 'LOOTABLE_OBJECT');
     }
 
     public getCloseObjects() {
@@ -175,20 +185,21 @@ export class Cell {
 
         return objects;
     }
+
+    private async penetrateObject(method, o) {
+        return new Promise((res) => {
+            this[method]();
+            this.attackingInterval = setInterval(() => {
+                this[method]();
+                if( ! this.getCloseObjects().find((_o) => o.left === _o.left && o.top === _o.top)) {
+                    clearInterval(this.attackingInterval);
+                    res()
+                }
+            }, 500);
+        });
+    }
 }
 
-async function penetrateObject(method, c, o) {
-    return new Promise((res) => {
-        c[method]();
-        const interval = setInterval(() => {
-            c[method]();
-            if( ! c.getCloseObjects().find((_o) => o.left === _o.left && o.top === _o.top)) {
-                clearInterval(interval);
-                res()
-            }
-        }, 500);
-    });
-}
 
 
 window.c1 = new Cell('c1');

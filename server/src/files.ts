@@ -14,6 +14,15 @@ export class Files {
         this.files.push({name: fileName, content: ''});
     }
 
+    public deleteFile(fileName: string) {
+        this.files = this.files.filter((f) => f.name !== fileName);
+    }
+
+    public changeFileName(oldName: string, newName: string) {
+        const file = this.files.find((f) => f.name == oldName);
+        file.name = newName;
+    }
+
     public initFiles(files?: Array<File>) {
         if(files) {
             this.files = files;

@@ -2,6 +2,7 @@ import {Cell, CellAttributes} from "./cell/cell";
 import * as fs from "fs";
 import {Item} from "./game";
 import {Files} from "./Files";
+import {PlayerCell} from "./cell/player-cell";
 
 export interface PersistentCharacter {
     name: string,
@@ -20,9 +21,17 @@ export class PlayerPersistence {
 
     private filePath = __dirname + '/files/' + this.playerName.replace('\s', '_').toLowerCase() + '.json';
 
-    constructor(private cells: Array<Cell>, private playerName: string, private files: Files) {
+    constructor(private cells: Array<PlayerCell>, private playerName: string, private files: Files) {
         this.initSaving();
         this.files.initFiles(this.getPlayerConfig()?.files);
+    }
+
+    public getCells(): Array<PlayerCell> {
+        return this.cells;
+    }
+
+    public getFiles(): Files {
+        return this.files;
     }
 
     private initSaving() {
