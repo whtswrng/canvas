@@ -3,6 +3,8 @@ const express = require('express');
 const {Entity} = require('./entity');
 const {map, app, io, server} = require('./globals');
 const { MobEntity } = require('./mob-entity');
+const { createTree } = require('./game-map');
+const { Material } = require('./material');
 
 
 
@@ -21,21 +23,26 @@ server.listen(PORT, () => {
   init();
 });
 
-
-function init() {
+async function init() {
+  // map.placeObject(10, 7, createTree())
+  // map.placeObject(10, 6, createTree())
+  const tree = new Material('tree', 30, 12, 7, 5, 'green', true, 'logs')
+  tree.placeMaterial();
   const player = new Entity('Player', 100, 50, 0, 1, 'player');
   player.placeEntity(7, 7); // Place the player at the center of the map
-  player.goToPosition(player.x+30, player.y);
+  console.log('promise start')
+  // await player.harvest(12, 7);
+  console.log('promise end')
 
   setTimeout(() => {
-    player.goToPosition(player.x-30, player.y);
+    // player.goToPosition(player.x-30, player.y);
   }, 15000)
 
-  // const enemy = new MobEntity('Rat', 80, 0, 0, 1);
-  // enemy.placeEntity(11, 11); // Place an enemy nearby
-  // enemy.guardArea(7)
+  const enemy = new MobEntity('Rat', 10, 0, 0, 1, 2, [{type: 'Varnish', min: 1, max: 4, chance: 80}]);
+  enemy.placeEntity(11, 11); // Place an enemy nearby
+  enemy.guardArea(7)
 
-  // player.attackEnemy(enemy)
+  player.attackEnemy(enemy)
 
   setInterval(printMap, 2000);
 

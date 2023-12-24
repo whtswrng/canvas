@@ -7,13 +7,22 @@ class GameMap {
 
   generateMap() {
     return Array.from({ length: this.height }, () =>
-      Array.from({ length: this.width }, () => ({
-        type: "ground",
-        bg: "#964B00",
-        occupiedBy: "",
-        items: [],
-      }))
+      Array.from({ length: this.width }, () => createObject())
     );
+  }
+
+
+  placeObject(x, y, obj) {
+    if (this.isValidPosition(x, y)) {
+      this.map[y][x] = obj
+      return true;
+    }
+    return false;
+  }
+
+  getObject(x, y) {
+    const o = this.map[y][x];
+    return o;
   }
 
   placeEntity(x, y, entity) {
@@ -72,7 +81,7 @@ class GameMap {
 
     function getCell(cell) {
       if (cell.occupiedBy) return '😊'
-      return cell.type[0]+' '
+      return cell.type[0] + ' '
     }
   }
 
@@ -88,11 +97,34 @@ class GameMap {
     return false;
   }
 
+  removeObject(x, y, defaultObj = createObject()) {
+    if (this.isValidPosition(x, y)) {
+      this.map[y][x] = defaultObj;
+      return true;
+    }
+    return false;
+  }
+
   isValidPosition(x, y) {
     return x >= 0 && x < this.width && y >= 0 && y < this.height;
   }
 }
 
+function createObject(type = 'ground', bg = '#964B00', _static = false, material = null) {
+  return {
+    type,
+    bg,
+    occupiedBy: null,
+    static: _static,
+    material,
+    items: [],
+  }
+}
+
+const createTree = () => createObject('tree', 'green', true);
+
 module.exports = {
   GameMap,
+  createTree,
+  createObject
 };

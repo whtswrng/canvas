@@ -1,4 +1,5 @@
 const { map } = require("./globals");
+const { getRandomInt } = require("./utils");
 
 class Entity {
   constructor(name, hp, mana, speed, experience, type) {
@@ -12,9 +13,9 @@ class Entity {
     this.level = 1;
     this.moving = false;
     this.movingInterval = null;
+    this.harvestingInterval = null;
     this.calculateLevel();
     this.attacking = false;
-    this.target = null;
     this.targetLocation = null;
     // map
     this.x = 0;
@@ -22,31 +23,68 @@ class Entity {
   }
 
   getDirectionsToTarget(targetX, targetY) {
-    const directionX = targetX > this.x ? 1 : targetX < this.x ? -1 : 0;
-    const directionY = targetY > this.y ? 1 : targetY < this.y ? -1 : 0;
+    let directionX = targetX > this.x ? 1 : targetX < this.x ? -1 : 0;
+    let directionY = targetY > this.y ? 1 : targetY < this.y ? -1 : 0;
+
+    const nextPosition = [this.x + directionX, this.y + directionY]
+
+    if (!map.canMove(nextPosition[0], nextPosition[1])) {
+      if (this.calculateDistance(this.x, this.y, targetX, targetY) <= 1) return [0, 0];
+      if (map.canMove(this.x + directionX, this.y + directionX)) {
+        directionY = directionX;
+        directionX = directionX;
+      }
+      if (map.canMove(this.x + directionY, this.y + directionY)) {
+        directionY = directionY;
+        directionX = directionY;
+      }
+    }
 
     return [directionX, directionY]
   }
 
   goToPosition(targetX, targetY) {
-    this.targetLocation = [targetX, targetY];
-    if (!this.moving) {
-      this.move();
-    }
+    return new Promise((res) => {
+      this.targetLocation = [targetX, targetY];
+      if (!this.moving) {
+        this.move(res);
+      }
+    });
+  }
+
+  async harvest(x, y, cb) {
+    console.log('---=============THERE BAYBE');
+    await this.goToPosition(x, y);
+    return new Promise((res) => {
+      if (this.harvestingInterval) clearInterval(this.harvestingInterval);
+
+      this.harvestingInterval = setInterval(() => {
+        const o = map.getObject(x, y)
+        if (o.material) {
+          const drop = o.material.harvest()
+          if (drop) {
+            this.addItem(drop)
+          }
+          if (o.material.harvested) {
+            clearInterval(this.harvestingInterval);
+            res()
+          }
+        }
+      }, 800)
+    });
   }
 
   attackEnemy(enemy) {
     this.attacking = true;
-    this.target = enemy;
     const { x, y } = enemy;
     this.goToPosition(x, y)
 
     setTimeout(() => {
       if (!this.attacking) return;
-      this.handleAttack()
-      if (this.target.hp == 0) {
+      if(this.hp === 0) return
+      this.handleAttack(enemy)
+      if (enemy.hp == 0) {
         console.log('stopping')
-        this.target = null;
         this.stop();
         return
       }
@@ -56,13 +94,7 @@ class Entity {
   }
 
   isInFrontOf(otherEntity) {
-    // Define the relative positions for "in front"
-    const deltaX = Math.abs(this.x - otherEntity.x);
-    const deltaY = Math.abs(this.y - otherEntity.y);
-
-    // Check if the other entity is in front based on your criteria
-    // For example, check if it's in the same row and the current entity is to the right
-    return deltaY < 2 && deltaX < 2;
+    return this.calculateDistance(this.x, this.y, otherEntity.x, otherEntity.y) < 1.5;
   }
 
 
@@ -71,7 +103,7 @@ class Entity {
     this.hp -= damage;
     if (this.hp <= 0) {
       this.hp = 0;
-      this.die();
+      return this.die();
     }
   }
 
@@ -105,7 +137,6 @@ class Entity {
     this.hp += healing;
     // You can add logic to limit the maximum HP if needed
   }
-
   useMana(manaCost) {
     if (this.mana >= manaCost) {
       this.mana -= manaCost;
@@ -124,6 +155,7 @@ class Entity {
   }
 
   addItem(item) {
+    console.log('Adding an item to inventory', item);
     this.inventory.push(item);
   }
 
@@ -134,7 +166,8 @@ class Entity {
     }
   }
 
-  move() {
+  move(cb) {
+    if(this.hp == 0) return;
     console.log('Start to move!', this.name)
     // Adjust the entity's position based on the vector and speed
     if (this.movingInterval) clearInterval(this.movingInterval);
@@ -157,17 +190,37 @@ class Entity {
           if (this.targetLocation && this.targetLocation[0] === x && this.targetLocation[1] === y) {
             this.stop()
             this.targetLocation = null;
+            cb?.();
           }
+        }
+      } else {
+        if (this.calculateDistance(this.x, this.y, this.targetLocation[0], this.targetLocation[1]) === 1) {
+          this.stop()
+          this.targetLocation = null;
+          cb?.()
         }
       }
     }, 700);
   }
 
-  handleAttack() {
+  isDead() {
+    return this.hp === 0;
+  }
+
+  handleAttack(enemy) {
     if (!this.attacking) return;
-    if (!this.isInFrontOf(this.target)) return;
-    console.log('dealing dmg -> ', this.name, this.target.name);
-    this.target.takeDamage(10);
+    if (!this.isInFrontOf(enemy)) return;
+    console.log('dealing dmg -> ', this.name, enemy.name);
+    const drops = enemy.takeDamage(10);
+    if(drops) {
+      for (const d of drops) {
+        this.addItem(d)
+      }
+    }
+  }
+
+  removeInventory() {
+    this.inventory = [];
   }
 
   placeEntity(x, y) {
@@ -179,9 +232,15 @@ class Entity {
   die() {
     console.log('dying...')
     this.stop();
-    if (this.movingInterval) clearInterval(this.movingInterval)
     console.log('removing eneity', this.name)
     map.removeEntity(this.x, this.y);
+    const drops = [];
+    for (const i of this.inventory) {
+      if (getRandomInt(0, 100) <= 30) {
+        drops.push({...i})
+      }
+    }
+    return drops;
   }
 
   getMap() {
@@ -189,6 +248,8 @@ class Entity {
   }
 
   stop() {
+    clearInterval(this.movingInterval);
+    clearInterval(this.harvestingInterval);
     this.attacking = false;
     this.moving = false
   }
