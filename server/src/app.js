@@ -1,7 +1,8 @@
 // Import required modules
 const express = require('express');
 const {Entity} = require('./entity');
-const {map, app, io, server} = require('./globals')
+const {map, app, io, server} = require('./globals');
+const { MobEntity } = require('./mob-entity');
 
 
 
@@ -22,16 +23,21 @@ server.listen(PORT, () => {
 
 
 function init() {
-  const char1 = new Entity('Player', 100, 50, 1, 0, 1);
+  const player = new Entity('Player', 100, 50, 0, 1, 'player');
+  player.placeEntity(7, 7); // Place the player at the center of the map
+  player.goToPosition(player.x+30, player.y);
 
-  const player = new Entity('Player', 100, 50, 0, 1);
-  player.placeEntity(7, 7, player); // Place the player at the center of the map
+  setTimeout(() => {
+    player.goToPosition(player.x-30, player.y);
+  }, 15000)
 
-  const enemy = new Entity('Enemy', 80, 0, 0, 1);
-  player.placeEntity(8, 8, enemy); // Place an enemy nearby
+  // const enemy = new MobEntity('Rat', 80, 0, 0, 1);
+  // enemy.placeEntity(11, 11); // Place an enemy nearby
+  // enemy.guardArea(7)
 
-  const playerMapView = map.getEntityMap(player);
-  map.print(playerMapView);
+  // player.attackEnemy(enemy)
+
+  setInterval(printMap, 2000);
 
   // Set up a connection event for new Socket.IO connections
   io.on('connection', (socket) => {
@@ -51,4 +57,10 @@ function init() {
     });
   });
 
+  function printMap() {
+    console.log('--------------------------')
+    const playerMapView = map.getEntityMap(player);
+    map.print(playerMapView);
+  }
 }
+

@@ -39,7 +39,7 @@ class GameMap {
     return false;
   }
 
-  getEntityMap(player, radius = 7) {
+  getEntityMap(player, radius = 4) {
     const playerX = player.x;
     const playerY = player.y;
 
@@ -65,9 +65,14 @@ class GameMap {
     for (const row of rawMap) {
       let rowString = '';
       for (const cell of row) {
-        rowString += `[${cell.type[0]}] `;
+        rowString += `[${getCell(cell)}] `;
       }
-      console.log(rowString);
+      console.log(rowString)
+    }
+
+    function getCell(cell) {
+      if (cell.occupiedBy) return '😊'
+      return cell.type[0]+' '
     }
   }
 
