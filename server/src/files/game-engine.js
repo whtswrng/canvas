@@ -1,1 +1,0 @@
-console.log(await c1.getItems())

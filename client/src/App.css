@@ -1,83 +1,27 @@
 body {
-    background: #232121;
+  background-color: #282c34;
 }
 
-.canvas-container {
-    border: 2px dashed #404040;
-    float: right;
-    transition: opacity 0.2s;
-    flex-grow: 0.1;
-    position: absolute !important;
-    opacity: 0.1;
-    top: 15px;
-    right: 15px;
-    -webkit-box-shadow: 18px 11px 36px -7px rgba(0,0,0,0.75);
-    -moz-box-shadow: 18px 11px 36px -7px rgba(0,0,0,0.75);
-    box-shadow: 18px 11px 36px -7px rgba(0,0,0,0.75);
+.grid-item {
+  height: 100%;
+  overflow: auto;
 }
 
-.editor-container {
-    width: 850px;
-    flex-grow: 0.6;
+/* Style the custom scrollbar */
+::-webkit-scrollbar {
+  width: 12px;
 }
 
-.editor-container .header {
-    display: flex;
-    padding: 20px;
-    background-color: #1e1e1e;
-    width: 369px;
+::-webkit-scrollbar-track {
+  background-color: rgba(0, 0, 0, 0.5);
 }
 
-.editor-container .header input {
-    font-family: inherit;
-    width: 200px;
-    border: 0;
-    border-bottom: 2px solid #9b9b9b;
-    outline: 0;
-    font-size: 1.3rem;
-    color: #fff;
-    padding: 7px 0;
-    background: transparent;
-    transition: border-color 0.2s;
+::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 10px;
+  border: 1px solid #888;
 }
 
-.editor-container .header button {
-    float: right;
-    font-size: 14px;
-    width: 80px;
-    height: 40px;
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
-
-.canvas-container:hover {
-    opacity: 1;
-}
-
-.App {
-    display: flex;
-    flex-direction: row;
-    height: 100vh;
-}
-
-.react-monaco-editor-container {
-}
-
-button {
-    user-select: none;
-    width: 90%;
-    color: grey;
-    font-size: 30px;
-    cursor: pointer;
-    margin-left: 10px;
-    margin-right: 10px;
-    margin-top: 10px;
-    background-color: #2a2929;
-    border: 1px solid #1e1c1c;
-    -webkit-box-shadow: 18px 11px 36px -7px rgba(0,0,0,0.75);
-    -moz-box-shadow: 18px 11px 36px -7px rgba(0,0,0,0.75);
-    box-shadow: 18px 11px 36px -7px rgba(0,0,0,0.75);
-}
-
-button:hover {
-    background-color: #353333;
-}
-
