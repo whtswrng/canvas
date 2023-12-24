@@ -8,9 +8,9 @@ class GameMap {
   generateMap() {
     return Array.from({ length: this.height }, () =>
       Array.from({ length: this.width }, () => ({
-        type: 'ground',
-        bg: '#964B00',
-        occupiedBy: '',
+        type: "ground",
+        bg: "#964B00",
+        occupiedBy: "",
         items: [],
       }))
     );
@@ -25,22 +25,59 @@ class GameMap {
   }
 
   moveEntity(oldX, oldY, newX, newY) {
+    if (this.map[newY][newX].static) return false;
     if (
       this.isValidPosition(oldX, oldY) &&
       this.isValidPosition(newX, newY) &&
-      this.map[oldY][oldX].occupiedBy !== '' &&
-      this.map[newY][newX].occupiedBy === ''
+      !!this.map[oldY][oldX].occupiedBy &&
+      !this.map[newY][newX].occupiedBy
     ) {
       this.map[newY][newX].occupiedBy = this.map[oldY][oldX].occupiedBy;
-      this.map[oldY][oldX].occupiedBy = '';
+      this.map[oldY][oldX].occupiedBy = "";
       return true;
     }
     return false;
   }
 
+  getEntityMap(player, radius = 7) {
+    const playerX = player.x;
+    const playerY = player.y;
+
+    const minX = Math.max(0, playerX - radius);
+    const maxX = Math.min(this.width - 1, playerX + radius);
+    const minY = Math.max(0, playerY - radius);
+    const maxY = Math.min(this.height - 1, playerY + radius);
+
+    const playerMap = [];
+
+    for (let y = minY; y <= maxY; y++) {
+      const row = [];
+      for (let x = minX; x <= maxX; x++) {
+        row.push(this.map[y][x]);
+      }
+      playerMap.push(row);
+    }
+
+    return playerMap;
+  }
+
+  print(rawMap) {
+    for (const row of rawMap) {
+      let rowString = '';
+      for (const cell of row) {
+        rowString += `[${cell.type[0]}] `;
+      }
+      console.log(rowString);
+    }
+  }
+
+  canMove(x, y) {
+    return this.isValidPosition(x, y) && !this.map[y][x].occupiedBy && !this.map[y][x].static;
+  }
+
   removeEntity(x, y) {
-    if (this.isValidPosition(x, y) && this.map[y][x].occupiedBy !== '') {
-      this.map[y][x].occupiedBy = '';
+    if (this.isValidPosition(x, y) && !!this.map[y][x].occupiedBy) {
+      this.map[y][x].occupiedBy = null;
       return true;
     }
     return false;
@@ -52,5 +89,5 @@ class GameMap {
 }
 
 module.exports = {
-	GameMap,
-}
+  GameMap,
+};

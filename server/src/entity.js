@@ -1,3 +1,5 @@
+const { map } = require("./globals");
+
 class Entity {
   constructor(name, hp, mana, speed, experience) {
     this.name = name;
@@ -56,30 +58,34 @@ class Entity {
     }
   }
 
-  move(direction) {
-    this.moving = true;
-    // Adjust the entity's position based on the speed and direction
-    switch (direction) {
-      case 'up':
-        this.y -= this.speed;
-        break;
-      case 'down':
-        this.y += this.speed;
-        break;
-      case 'left':
-        this.x -= this.speed;
-        break;
-      case 'right':
-        this.x += this.speed;
-        break;
-      default:
-        break;
-    }
+  move(vector) {
+    // Adjust the entity's position based on the vector and speed
     if(this.movingInterval) clearInterval(this.movingInterval);
 
+    const [dx, dy] = vector;
+    const x = this.x+dx;
+    const y = this.y+dy;
+
     this.movingInterval = setInterval(() => {
-      // moving here
+      if(!this.moving) return clearInterval(this.movingInterval);
+
+      if(map.canMove(x, y)){
+        if(map.moveEntity(this.x, this.y, x, y)){
+          this.x = x;
+          this.y = y
+        }
+      }
     }, 500);
+  }
+
+  placeEntity(x, y) {
+    map.placeEntity(x,y, this);
+    this.x = x;
+    this.y = y;
+  }
+
+  getMap() {
+    return map.getEntityMap(this, 7);
   }
 
   stop() {

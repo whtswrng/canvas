@@ -1,19 +1,9 @@
 // Import required modules
 const express = require('express');
-const http = require('http');
-const socketIO = require('socket.io');
-const cors = require('cors'); // Import the cors middleware
-const { GameMap } = require('./game-map');
 const {Entity} = require('./entity');
+const {map, app, io, server} = require('./globals')
 
 
-// Create an Express app
-const app = express();
-app.use(cors());
-const server = http.createServer(app);
-
-// Create a Socket.IO instance attached to the server
-export const io = socketIO(server);
 
 // Serve static files from the 'public' directory
 app.use(express.static('public'));
@@ -30,11 +20,18 @@ server.listen(PORT, () => {
   init();
 });
 
-export const map = new GameMap(1000, 1000);
 
 function init() {
   const char1 = new Entity('Player', 100, 50, 1, 0, 1);
-  map.generateMap();
+
+  const player = new Entity('Player', 100, 50, 0, 1);
+  player.placeEntity(7, 7, player); // Place the player at the center of the map
+
+  const enemy = new Entity('Enemy', 80, 0, 0, 1);
+  player.placeEntity(8, 8, enemy); // Place an enemy nearby
+
+  const playerMapView = map.getEntityMap(player);
+  map.print(playerMapView);
 
   // Set up a connection event for new Socket.IO connections
   io.on('connection', (socket) => {
