@@ -1,0 +1,27 @@
+.log.sentiment-5 {
+    color: green;
+    font-weight: 800;
+}
+
+.log.sentiment-4 {
+    color: green;
+}
+
+.log.sentiment-3 {
+    color: black;
+}
+
+.log.sentiment-2 {
+    color: red;
+}
+
+.log.sentiment-1 {
+    color: red;
+    font-weight: 800;
+}
+
+
+.logs-container {
+    overflow: auto;
+    max-height: 300px;
+}

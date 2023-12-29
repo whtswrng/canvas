@@ -1,3 +1,7 @@
+/* iframe#webpack-dev-server-client-overlay {
+  display: none !important;
+} */
+
 body {
   background-color: #282c34;
 }
@@ -24,4 +28,14 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
+}
+
+.card {
+  margin: 10px;
+  padding: 20px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  background-color: #f2f2f2;
+  border-radius: 8px;
+  font-size: 12px;
 }

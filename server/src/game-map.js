@@ -1,3 +1,5 @@
+const { getRandomInt } = require("./utils");
+
 class GameMap {
   constructor(width, height) {
     this.width = width;
@@ -6,15 +8,22 @@ class GameMap {
   }
 
   generateMap() {
-    return Array.from({ length: this.height }, () =>
-      Array.from({ length: this.width }, () => createObject())
+    return Array.from({ length: this.height }, (_, h) =>
+      Array.from({ length: this.width }, (_, w) => createRandomObject(w, h))
     );
   }
-
 
   placeObject(x, y, obj) {
     if (this.isValidPosition(x, y)) {
       this.map[y][x] = obj
+      return true;
+    }
+    return false;
+  }
+
+  placeMaterial(x, y, mat) {
+    if (this.isValidPosition(x, y)) {
+      this.map[y][x].material = mat
       return true;
     }
     return false;
@@ -48,7 +57,7 @@ class GameMap {
     return false;
   }
 
-  getEntityMap(player, radius = 4) {
+  getEntityMap(player, radius = 6) {
     const playerX = player.x;
     const playerY = player.y;
 
@@ -81,6 +90,7 @@ class GameMap {
 
     function getCell(cell) {
       if (cell.occupiedBy) return '😊'
+      if (cell.material) return '🌷'
       return cell.type[0] + ' '
     }
   }
@@ -97,7 +107,15 @@ class GameMap {
     return false;
   }
 
-  removeObject(x, y, defaultObj = createObject()) {
+  removeMaterial(x, y) {
+    if (this.isValidPosition(x, y) && !!this.map[y][x].material) {
+      this.map[y][x].material = null;
+      return true;
+    }
+    return false;
+  }
+
+  removeObject(x, y, defaultObj = createObject(x, y)) {
     if (this.isValidPosition(x, y)) {
       this.map[y][x] = defaultObj;
       return true;
@@ -110,8 +128,19 @@ class GameMap {
   }
 }
 
-function createObject(type = 'ground', bg = '#964B00', _static = false, material = null) {
+function createRandomObject(x, y) {
+  if(getRandomInt(0, 100) <= 70) {
+    return createObject(x, y, 'grass', 'green');
+  } else {
+    // return createObject(x, y, 'grass', 'green');
+    return createObject(x, y);
+  }
+}
+
+function createObject(x, y, type = 'dirt', bg = '#4B5320', _static = false, material = null) {
   return {
+    x,
+    y,
     type,
     bg,
     occupiedBy: null,
@@ -121,10 +150,8 @@ function createObject(type = 'ground', bg = '#964B00', _static = false, material
   }
 }
 
-const createTree = () => createObject('tree', 'green', true);
 
 module.exports = {
   GameMap,
-  createTree,
   createObject
 };
