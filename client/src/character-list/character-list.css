@@ -94,3 +94,14 @@
 .inventory-container {
   /* Inventory styles... */
 }
+
+.character-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.enemy-container {
+  width: 60px;
+  height: 60px;
+}

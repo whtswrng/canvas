@@ -4,6 +4,7 @@ import { Map } from "../map/map";
 import { useListen } from "../listen";
 import { UserActions } from "./user-actions/user-actions";
 import { ControlPanel } from "./control-panel/control-panel";
+import { Entity } from "../map/cells/entity";
 
 export const Character = ({ character: defaultChar }) => {
   const { name } = defaultChar;
@@ -11,10 +12,13 @@ export const Character = ({ character: defaultChar }) => {
 
   const { data: basicAttrsUpdated } = useListen(
     "BASIC_ATTRIBUTES_UPDATED",
-    defaultChar.id
+    defaultChar.playerId
   );
-  const { data: _attrs } = useListen("ATTRIBUTES_UPDATED", defaultChar.id);
-  const { data: _inventory } = useListen("ATTRIBUTES_UPDATED", defaultChar.id);
+  const { data: _attrs } = useListen("ATTRIBUTES_UPDATED", defaultChar.playerId);
+  const { data: _inventory } = useListen("ATTRIBUTES_UPDATED", defaultChar.playerId);
+  const { data: _stateData } = useListen("CHANGE_STATE", defaultChar.playerId);
+
+  const playerState = _stateData?.state;
 
   const updatedHp = basicAttrsUpdated?.attrs?.hp;
   const updatedMana = basicAttrsUpdated?.attrs?.mana;
@@ -41,7 +45,14 @@ export const Character = ({ character: defaultChar }) => {
   return (
     <div className="card character-container">
       <div>
-        <h2>{name}</h2>
+        <div className="character-header">
+          <div>
+            <h2>{name}</h2><span style={{color: getStateColor()}}>{playerState}</span>
+          </div>
+          <div className="enemy-container">
+            <Entity cell={{occupiedBy: {name: 'Rat', kind: 'rat'}}}/>
+          </div>
+        </div>
         <div className="character-details">
           <div className="basic">
             <p>
@@ -95,4 +106,11 @@ export const Character = ({ character: defaultChar }) => {
       {state === "panel" && <ControlPanel />}
     </div>
   );
+
+  function getStateColor() {
+    if (playerState === 'IDLE') return 'grey'
+    if (playerState === 'ATTACKING') return 'red'
+    if (playerState === 'GATHERING') return 'green'
+    if (playerState === 'walking') return 'white'
+  }
 };

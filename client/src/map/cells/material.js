@@ -13,10 +13,10 @@ export const Material = ({ cell }) => {
     <>
       <div
         className="player-container"
-        id={"material-" + cell.x+cell.y}
+        id={"material-" + cell.x + cell.y}
         style={{
           backgroundImage: `url(${backgroundImageUrl})`,
-          backgroundColor: cell.bg+'96',
+          backgroundColor: cell.bg + "96",
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
@@ -25,19 +25,25 @@ export const Material = ({ cell }) => {
           <div
             className="player-progress-bar-hp-fill"
             style={{
-              width: `${calculatePercentage(cell.material.hp, cell.material.maxHp)}%`,
+              width: `${calculatePercentage(
+                cell.material.hp,
+                cell.material.maxHp
+              )}%`,
             }}
           />
         </div>
         {/* You can add additional content or styling if needed */}
       </div>
-      <Tooltip anchorSelect={"#material-" + cell.x+cell.y} place="top">
+      <Tooltip anchorSelect={"#material-" + cell.x + cell.y} place="top">
         <div>
           <span style={{ fontWeight: 800 }}>
             {material.level} {material.name}
           </span>
         </div>
-        <div style={{color: 'green'}}>
+        <div style={{ fontSize: 8, fontWeight: 200 }}>
+          {cell.x} | {cell.y}
+        </div>
+        <div style={{ color: "green" }}>
           Hp {material.hp}/{material.maxHp}
         </div>
       </Tooltip>

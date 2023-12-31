@@ -1,7 +1,14 @@
-const { map } = require("./globals");
-const { getRandomInt } = require("./utils");
+const { map } = require("../globals");
+const { getRandomInt } = require("../utils");
 
 const MAP_REFRESH_RATE_IN_MS = 220;
+
+const STATE = {
+  ATTACKING: "ATTACKING",
+  IDLE: "IDLE",
+  GATHERING: "GATHERING",
+  MOVING: "MOVING",
+};
 
 class Entity {
   constructor({
@@ -12,13 +19,15 @@ class Entity {
     speed,
     kind,
     experience,
-    type,
+    type = "player",
     inventory = [],
     attackRange = 1,
-    castingSpeed = 600,
+    attackSpeed = 900,
     map,
     connection,
+    autoDefend = false,
   }) {
+    this.changeStateCb = null;
     this.id = id;
     this.name = name;
     this.hp = hp;
@@ -26,6 +35,7 @@ class Entity {
     this.type = type;
     this.kind = kind; // rat, light-mage, ...
     this.connection = connection;
+    this.autoDefend = autoDefend;
     this.mana = mana;
     this.maxMana = hp;
     this.experience = experience;
@@ -43,9 +53,12 @@ class Entity {
     this.movingInterval = null;
     this.harvestingInterval = null;
     this.attacking = false;
+    this.attackingInterval = null;
     this.targetLocation = null;
+    this.target = null;
     this.attackRange = attackRange;
-    this.castingSpeed = castingSpeed;
+    this.attackSpeed = attackSpeed;
+    this.state = "IDLE";
     // map
     this.map = map;
     this.x = 0;
@@ -132,20 +145,18 @@ class Entity {
   goToPosition(targetX, targetY, movedCb) {
     return new Promise((res) => {
       this.targetLocation = [targetX, targetY];
-      if (!this.moving) {
-        this.move(res, movedCb);
-      }
+      this.stopMovement();
+      this.move(res, movedCb);
     });
   }
 
   async gather(x, y, cb) {
     console.log("---=============THERE BAYBE");
+    this.changeState(STATE.GATHERING);
     await this.goToPosition(x, y);
     return new Promise((res) => {
       if (this.harvestingInterval) clearInterval(this.harvestingInterval);
-
       this.harvestingInterval = setInterval(() => {
-        this.changeState("GATHERING");
         const o = this.map.getObject(x, y);
         if (o.material) {
           const drop = o.material.harvest();
@@ -164,37 +175,53 @@ class Entity {
   changeState(state) {
     this.state = state;
     this.connection.changeState(this.id, state);
+    this.changeStateCb?.(state);
   }
 
-  attackEnemy(enemy) {
+  registerStateCb(cb) {
+    this.changeStateCb = cb;
+  }
+
+  calculateAttackSpeed() {
+    return this.attackSpeed;
+  }
+
+  async attackEnemy(enemy) {
+    const handleAttack = () => {
+      clearInterval(this.attackingInterval);
+      this.attackingInterval = setInterval(() => {
+        if (enemy.isDead() || this.isDead()) {
+          return stop();
+        }
+        if (!this.attacking) {
+          return stop();
+        }
+        console.log(this.name, this.isEnemyInRange(enemy));
+        if (this.isEnemyInRange(enemy)) {
+          this.doAttack(enemy);
+        } else {
+          const { x, y } = enemy;
+          this.goToPosition(x, y);
+        }
+      }, this.calculateAttackSpeed());
+    };
+
+    const stop = () => {
+      this.target = null;
+      clearInterval(this.attackingInterval);
+      this.stopAll();
+    };
+
     this.attacking = true;
     const { x, y } = enemy;
 
+    this.target = enemy;
+    this.changeState(STATE.ATTACKING);
     this.connection.attackEnemy(this.id, enemy);
+    console.log("target: ", enemy.name);
     enemy.attackInitiated(this);
-    this.goToPosition(x, y, () => {
-      // called when moved
-      if (this.isEnemyInRange(enemy)) {
-        this.doAttack(enemy);
-        let interval = setInterval(() => {
-          if (enemy.isDead() || this.isDead()) {
-            clearInterval(interval);
-            this.stopAll();
-            return;
-          }
-          if (!this.attacking) {
-            clearInterval(interval);
-            return;
-          }
-          if ((this.isEnemyInRange(enemy), 1)) {
-            this.doAttack(enemy);
-          } else {
-            clearInterval(interval);
-            this.attackEnemy(enemy);
-          }
-        }, this.castingSpeed);
-      }
-    });
+
+    handleAttack();
   }
 
   attackInitiated(from) {
@@ -203,7 +230,7 @@ class Entity {
 
   isEnemyInRange(enemy, addition = 0) {
     return (
-      this.calculateDistance(this.x, this.y, enemy.x, enemy.y) <=
+      Math.floor(this.calculateDistance(this.x, this.y, enemy.x, enemy.y)) <=
       this.attackRange + addition
     );
   }
@@ -233,7 +260,6 @@ class Entity {
     // Ensure damage is non-negative
     damage = Math.max(3, damage);
 
-    this.changeState("ATTACKING");
     const drops = enemy.takeDamage(damage, this);
     this.connection.enemyHit(this.id, damage, this, enemy);
     if (enemy.isDead()) {
@@ -268,6 +294,9 @@ class Entity {
     if (this.hp <= 0) {
       return this.die();
     }
+
+    console.log("taking damage", this.autoDefend, this.attacking);
+    if (this.autoDefend && !this.attacking) this.attackEnemy(from);
   }
 
   getClosestTarget(type, range) {
@@ -324,6 +353,7 @@ class Entity {
 
   addItem(item) {
     console.log("Adding an item to inventory", item);
+    item.equiped = false;
     this.inventory.push(item);
     this.connection.addItem(this.id, item);
     this.connection.updateInventory(this.id, this.inventory);
@@ -337,17 +367,38 @@ class Entity {
   }
 
   move(doneCb, movedCb) {
+    const finish = () => {
+      this.stopMovement();
+      this.targetLocation = null;
+      doneCb?.();
+    };
+
     if (this.hp == 0) return;
-    console.log("Start to move!", this.name);
+    console.log(
+      "Start to move!",
+      this.name,
+      [this.x, this.y],
+      this.targetLocation
+    );
     // Adjust the entity's position based on the vector and speed
     if (this.movingInterval) clearInterval(this.movingInterval);
-    if (!this.targetLocation) return;
+    if (!this.targetLocation) return finish();
+    if (
+      this.calculateDistance(
+        this.x,
+        this.y,
+        this.targetLocation[0],
+        this.targetLocation[1]
+      ) < 1
+    )
+      return finish();
 
     this.moving = true;
-    this.changeState("MOVING");
+
+    if (this.state === STATE.IDLE) this.changeState(STATE.MOVING);
 
     this.movingInterval = setInterval(() => {
-      if (!this.moving) return clearInterval(this.movingInterval);
+      if (!this.moving || !this.targetLocation) return this.stopMovement();
       const [dx, dy] = this.getDirectionsToTarget(
         this.targetLocation[0],
         this.targetLocation[1]
@@ -369,24 +420,20 @@ class Entity {
             this.targetLocation[0] === x &&
             this.targetLocation[1] === y
           ) {
-            this.stopAll();
-            this.targetLocation = null;
-            doneCb?.();
+            finish();
           }
         }
       } else {
-        if (
-          this.calculateDistance(
-            this.x,
-            this.y,
-            this.targetLocation[0],
-            this.targetLocation[1]
-          ) === 1
-        ) {
-          this.stopAll();
-          this.targetLocation = null;
-          doneCb?.();
-        }
+        finish();
+        // if (
+        //   this.calculateDistance(
+        //     this.x,
+        //     this.y,
+        //     this.targetLocation[0],
+        //     this.targetLocation[1]
+        //   ) === 1
+        // ) {
+        // }
       }
     }, 700);
   }
@@ -429,16 +476,17 @@ class Entity {
     clearInterval(this.harvestingInterval);
     this.attacking = false;
     this.stopMovement();
-    this.changeState("IDLE");
+    this.changeState(STATE.IDLE);
   }
 
   stopMovement() {
     clearInterval(this.movingInterval);
     this.moving = false;
-    this.changeState("IDLE");
+    if (this.state === STATE.MOVING) this.changeState(STATE.IDLE);
   }
 }
 
 module.exports = {
   Entity,
+  STATE,
 };

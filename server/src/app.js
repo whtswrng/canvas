@@ -2,9 +2,10 @@
 const express = require("express");
 const { map, app, io, server } = require("./globals");
 const { Connection } = require("./connection");
-const { Entity } = require("./entity");
+const { Entity } = require("./entity/entity");
 const { getRandomInt } = require("./utils");
 const { enemy } = require("./mocks");
+const { EntityControl } = require("./entity/entity-control");
 require("./mocks");
 
 // Serve static files from the 'public' directory
@@ -31,12 +32,11 @@ async function init() {
       id: getRandomInt(0, 1000000),
       name: "Player",
       hp: 100,
-      kind: 'light-mage',
+      kind: "light-mage",
       mana: 50,
       speed: 0,
       experience: 1,
-      type: "player",
-      attackRange: 4.5,
+      attackRange: 4,
       connection,
       map,
       inventory: [
@@ -55,20 +55,60 @@ async function init() {
         },
       ],
     });
+    const controls = [
+      {
+        type: "autoDefend",
+        actionValue: true,
+      },
+      {
+        type: "controls",
+        actionValue: true,
+      },
+      {
+        type: "basic",
+        actionType: "attackEnemy",
+        actionValue: "",
+        condition: "ifTargetLvl",
+        conditionValue: "isLowerThan",
+        conditionComparisonValue: "99",
+      },
+      {
+        type: "pathing",
+        actionType: "goToPosition",
+        actionValue: "5 9",
+        condition: "",
+        conditionValue: "",
+        conditionComparisonValue: "",
+      },
+      {
+        type: "pathing",
+        actionType: "goToPosition",
+        actionValue: "7 13",
+        condition: "",
+        conditionValue: "",
+        conditionComparisonValue: "",
+      },
+    ];
+    const entityControl = new EntityControl(player, controls);
     player.placeEntity(5, 5); // Place the player at the center of the map
+    entityControl.init();
 
-    player.attackEnemy(enemy)
+    // player.attackEnemy(enemy)
 
     // player.goToPosition(8, 9); // Place the player at the center of the map
 
-
-    setInterval(printMap, 2000);
+    // setInterval(printMap, 2000);
 
     function printMap() {
       console.log("--------------------------");
       const playerMapView = map.getEntityMap(player);
       map.print(playerMapView);
     }
+
+    socket.on("UPDATE_CONTROLS", ({ playerId, list }) => {
+      console.log("============", list);
+      // entityControl.setControls(list);
+    });
 
     // Handle messages from clients
     socket.on("message", (data) => {

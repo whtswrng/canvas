@@ -16,8 +16,6 @@ export const Entity = ({ cell }) => {
         id={"player-" + entity.id}
         style={{
           backgroundColor: cell.bg,
-          height: 40,
-          width: 40,
           backgroundImage: `url(${backgroundImageUrl})`,
           backgroundSize: "cover",
           backgroundPosition: "center"
@@ -39,7 +37,8 @@ export const Entity = ({ cell }) => {
             {entity.level} {entity.name}
           </span>
         </div>
-        <div style={{ fontSize: 8, fontWeight: 200 }}>Passive</div>
+        {/* <div style={{ fontSize: 8, fontWeight: 200 }}>Passive</div> */}
+        <div style={{ fontSize: 8, fontWeight: 200 }}>{cell.x} | {cell.y}</div>
         <div style={{color: 'green'}}>
           Hp {entity.hp}/{entity.maxHp}
         </div>

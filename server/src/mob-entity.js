@@ -1,5 +1,5 @@
 const { Connection } = require("./connection");
-const { Entity } = require("./entity");
+const { Entity, STATE } = require("./entity/entity");
 const { map } = require("./globals");
 const { getRandomInt, generateUniqueString } = require("./utils");
 
@@ -21,7 +21,7 @@ class MobEntity extends Entity {
     kind,
     speed,
     experience,
-    defensive = true,
+    autoDefend = true,
     respawnInS,
     drops = [],
     map,
@@ -37,8 +37,8 @@ class MobEntity extends Entity {
       map,
       type: "mob",
       connection: mockConnection,
-      attackRange: 2,
-      castingSpeed: 1000,
+      attackRange: 1,
+      attackSpeed: 1200,
     });
     this.originalHp = hp;
     this.originalMana = mana;
@@ -47,44 +47,44 @@ class MobEntity extends Entity {
     this.originalX = -1;
     this.originalY = -1;
     this.drops = drops; // {type: 'Varnish', chance: 30, min: 4, max: 8}
-    this.defensive = defensive;
+    this.autoDefend = autoDefend;
   }
 
-  guardArea(range) {
-    this.guardInterval = setInterval(() => {
-      if (this.isDead()) return;
-      if (this.attacking) {
-        if (
-          this.calculateDistance(
-            this.x,
-            this.y,
-            this.originalX,
-            this.originalY
-          ) > 14
-        ) {
-          this.stop();
-          this.goToPosition(this.originalX, this.originalY);
-        }
-      } else {
-        if (this.moving) return;
-        const target = this.getClosestTarget("player", range);
-        if (target) {
-          this.attackEnemy(target);
-        } else {
-          if (
-            this.calculateDistance(
-              this.x,
-              this.y,
-              this.originalX,
-              this.originalY
-            ) > 8
-          ) {
-            this.goToPosition(this.originalX, this.originalY);
-          }
-        }
-      }
-    }, 400);
-  }
+  // guardArea(range) {
+  //   this.guardInterval = setInterval(() => {
+  //     if (this.isDead()) return;
+  //     if (this.attacking) {
+  //       if (
+  //         this.calculateDistance(
+  //           this.x,
+  //           this.y,
+  //           this.originalX,
+  //           this.originalY
+  //         ) > 14
+  //       ) {
+  //         this.stop();
+  //         this.goToPosition(this.originalX, this.originalY);
+  //       }
+  //     } else {
+  //       if (this.moving) return;
+  //       const target = this.getClosestTarget("player", range);
+  //       if (target) {
+  //         this.attackEnemy(target);
+  //       } else {
+  //         if (
+  //           this.calculateDistance(
+  //             this.x,
+  //             this.y,
+  //             this.originalX,
+  //             this.originalY
+  //           ) > 8
+  //         ) {
+  //           this.goToPosition(this.originalX, this.originalY);
+  //         }
+  //       }
+  //     }
+  //   }, 400);
+  // }
 
   die() {
     let drops = super.die();
@@ -115,7 +115,6 @@ class MobEntity extends Entity {
 
   takeDamage(dmg, fromEnemy) {
     super.takeDamage(dmg, fromEnemy);
-    if (this.defensive) this.attackEnemy(fromEnemy);
   }
 
   spawn() {
@@ -124,6 +123,7 @@ class MobEntity extends Entity {
     this.x = this.originalX;
     this.y = this.originalY;
     this.map.placeEntity(this.x, this.y, this);
+    this.changeState(STATE.IDLE);
   }
 }
 

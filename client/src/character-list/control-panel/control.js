@@ -42,7 +42,7 @@ const Control = ({
       actionValue: selectedValue,
       condition: selectedCondition,
       conditionValue,
-      conditionComparisonValue: comparisonValue,
+      conditionComparisonValue: comparisonValue ? comparisonValue + getFormat(selectedCondition) : '',
     };
 
     save(actionPayload);
@@ -50,6 +50,39 @@ const Control = ({
 
   const handleRemoveAction = (actionToRemove) => {
     remove(actionToRemove);
+  };
+
+  function getFormat(condition) {
+    const o = conditionOptions.find((c) => c.value === condition);
+    if (o && o.format !== undefined) return o.format;
+    return "%";
+  }
+
+  const ActionRow = ({ action, handleRemoveAction, conditionOptions }) => {
+    return (
+      <div key={action.id} className="action-row">
+        {optionalRender(action.condition, { marginLeft: 0 })}
+        {optionalRender(action.conditionValue)}
+        {optionalRender(action.conditionComparisonValue)}
+        {optionalRender(action.actionType)}
+        {optionalRender(action.actionValue, { fontWeight: "bold" })}
+        <span
+          style={{ fontWeight: "bold", cursor: "pointer", marginLeft: 10 }}
+          onClick={() => handleRemoveAction(action)}
+        >
+          x
+        </span>
+      </div>
+    );
+
+    function optionalRender(value, styles = {}, suffix) {
+      return value ? (
+        <span style={{ ...styles }}>
+          {value}
+          {suffix}
+        </span>
+      ) : null;
+    }
   };
 
   return (
@@ -140,43 +173,6 @@ const Control = ({
       </div>
     </div>
   );
-};
-
-export const ActionRow = ({ action, handleRemoveAction, conditionOptions }) => {
-  return (
-    <div key={action.id} className="action-row">
-      {optionalRender(action.condition, { marginLeft: 0 })}
-      {optionalRender(action.conditionValue)}
-      {optionalRender(
-        action.conditionComparisonValue,
-        {},
-        getFormat(action.condition)
-      )}
-      {optionalRender(action.actionType)}
-      {optionalRender(action.actionValue, { fontWeight: "bold" })}
-      <span
-        style={{ fontWeight: "bold", cursor: "pointer", marginLeft: 10 }}
-        onClick={() => handleRemoveAction(action)}
-      >
-        x
-      </span>
-    </div>
-  );
-
-  function getFormat(condition) {
-    const o = conditionOptions.find((c) => c.value === condition);
-    if (o && o.format !== undefined) return o.format;
-    return "%";
-  }
-
-  function optionalRender(value, styles = {}, suffix) {
-    return value ? (
-      <span style={{ ...styles }}>
-        {value}
-        {suffix}
-      </span>
-    ) : null;
-  }
 };
 
 export default Control;
