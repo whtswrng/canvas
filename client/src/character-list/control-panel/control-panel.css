@@ -1,7 +1,6 @@
 .control-panel {
     display: flex;
     flex-direction: column;
-    align-items: first baseline;
   }
   
   .action-list {

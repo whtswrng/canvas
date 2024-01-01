@@ -110,6 +110,10 @@ async function init() {
       // entityControl.setControls(list);
     });
 
+    socket.on("FORCE_INVENTORY_UPDATED", (data) => {
+      player.emitInventory()
+    });
+
     // Handle messages from clients
     socket.on("message", (data) => {
       console.log("Message from client:", data);

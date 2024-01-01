@@ -20,14 +20,14 @@ tree.placeMaterial();
 
 const enemy = new MobEntity({
   name: "Rat",
-  hp: 300,
+  hp: 60,
   mana: 0,
   kind: 'rat',
   speed: 0,
   map,
   experience: 1,
   respawnInS: 2,
-  drops: [{ type: "Varnish", min: 1, max: 4, chance: 80 }],
+  drops: [{ name: "Varnish", min: 1, max: 3, chance: 99 }],
 });
 
 const controls = [

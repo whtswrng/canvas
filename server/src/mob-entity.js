@@ -91,7 +91,7 @@ class MobEntity extends Entity {
     for (const o of this.drops) {
       if (getRandomInt(0, 1000) <= o.chance * 10) {
         drops.push({
-          type: o.type,
+          name: o.name,
           amount: o.min ? getRandomInt(o.min, o.max) : 1,
         });
       }
@@ -111,10 +111,6 @@ class MobEntity extends Entity {
     this.originalX = x;
     this.originalY = y;
     super.placeEntity(x, y);
-  }
-
-  takeDamage(dmg, fromEnemy) {
-    super.takeDamage(dmg, fromEnemy);
   }
 
   spawn() {

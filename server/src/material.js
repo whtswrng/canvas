@@ -37,7 +37,7 @@ class Material {
       this.map.removeMaterial(this.x, this.y);
       this.respawn();
       this.harvested = true;
-      return { type: this.dropItem, amount: 10 };
+      return { name: this.dropItem, amount: 1 };
     }
 
     this.hp -= 10;

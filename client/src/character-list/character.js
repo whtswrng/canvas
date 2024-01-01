@@ -5,18 +5,21 @@ import { useListen } from "../listen";
 import { UserActions } from "./user-actions/user-actions";
 import { ControlPanel } from "./control-panel/control-panel";
 import { Entity } from "../map/cells/entity";
+import { Inventory } from "./inventory/inventory";
 
 export const Character = ({ character: defaultChar }) => {
   const { name } = defaultChar;
   const [state, setState] = useState(null);
 
+  const playerId = defaultChar.playerId;
   const { data: basicAttrsUpdated } = useListen(
     "BASIC_ATTRIBUTES_UPDATED",
     defaultChar.playerId
   );
-  const { data: _attrs } = useListen("ATTRIBUTES_UPDATED", defaultChar.playerId);
-  const { data: _inventory } = useListen("ATTRIBUTES_UPDATED", defaultChar.playerId);
-  const { data: _stateData } = useListen("CHANGE_STATE", defaultChar.playerId);
+  const { data: _attrs } = useListen("ATTRIBUTES_UPDATED", playerId);
+  const { data: _stateData } = useListen("CHANGE_STATE", playerId);
+  const { data: map } = useListen("MAP_UPDATED", playerId);
+  const { data: enemyHit } = useListen("ENEMY_HIT", playerId);
 
   const playerState = _stateData?.state;
 
@@ -29,7 +32,8 @@ export const Character = ({ character: defaultChar }) => {
   const maxMana = _attrs?.mana || defaultChar.maxMana;
 
   const attrs = _attrs || defaultChar.attrs;
-  const inventory = _inventory || defaultChar.inventory;
+
+  const currentTarget = getCurrentTarget();
 
   const calculatePercentage = (current, total) => {
     return (current / total) * 100;
@@ -47,10 +51,11 @@ export const Character = ({ character: defaultChar }) => {
       <div>
         <div className="character-header">
           <div>
-            <h2>{name}</h2><span style={{color: getStateColor()}}>{playerState}</span>
+            <h2>{name}</h2>
+            <span style={{ color: getStateColor() }}>{playerState}</span>
           </div>
           <div className="enemy-container">
-            <Entity cell={{occupiedBy: {name: 'Rat', kind: 'rat'}}}/>
+            {currentTarget && <Entity cell={{ occupiedBy: currentTarget }} tooltipOpen={true}/>}
           </div>
         </div>
         <div className="character-details">
@@ -86,6 +91,9 @@ export const Character = ({ character: defaultChar }) => {
           <button className="action" onClick={() => toggleState("panel")}>
             Control panel
           </button>
+          <button className="action" onClick={() => toggleState("inventory")}>
+            Inventory
+          </button>
           <button className="action" onClick={() => toggleState("map")}>
             Map
           </button>
@@ -104,13 +112,32 @@ export const Character = ({ character: defaultChar }) => {
         </div>
       )}
       {state === "panel" && <ControlPanel />}
+      {state === "inventory" && <Inventory playerId={playerId} />}
     </div>
   );
 
+  function getCurrentTarget() {
+    const enemyId = enemyHit?.enemy?.id;
+    const enemy = findEntityInMap();
+
+    return enemy;
+
+    function findEntityInMap() {
+      if(!map?.map) return;
+      for (const row of map?.map) {
+        for (const cell of row) {
+          if (cell.occupiedBy?.id === enemyId) {
+            return cell.occupiedBy;
+          }
+        }
+      }
+    }
+  }
+
   function getStateColor() {
-    if (playerState === 'IDLE') return 'grey'
-    if (playerState === 'ATTACKING') return 'red'
-    if (playerState === 'GATHERING') return 'green'
-    if (playerState === 'walking') return 'white'
+    if (playerState === "IDLE") return "grey";
+    if (playerState === "ATTACKING") return "red";
+    if (playerState === "GATHERING") return "green";
+    if (playerState === "walking") return "white";
   }
 };

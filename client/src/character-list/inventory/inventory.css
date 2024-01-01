@@ -1,0 +1,26 @@
+.inventory {
+  margin-top: 20px;
+}
+
+.inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(54px, 1fr));
+  gap: 6px;
+}
+
+.inventory-item {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  overflow: hidden;
+  width: 55px;
+  height: 55px;
+}
+
+.inventory-item img {
+  max-width: 100%;
+  height: auto;
+}
+
+.item-details {
+  margin-top: 8px;
+}

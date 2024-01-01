@@ -1,7 +1,7 @@
 import "./player.css";
 import { Tooltip } from "react-tooltip";
 
-export const Entity = ({ cell }) => {
+export const Entity = ({ cell, tooltipOpen }) => {
   const entity = cell.occupiedBy;
   const backgroundImageUrl = `/images/${entity.kind}.jpg`; // Replace with your image URL
 
@@ -31,7 +31,7 @@ export const Entity = ({ cell }) => {
         </div>
         {/* You can add additional content or styling if needed */}
       </div>
-      <Tooltip anchorSelect={"#player-" + entity.id} place="top">
+      <Tooltip anchorSelect={"#player-" + entity.id} place="top" isOpen={tooltipOpen}>
         <div>
           <span style={{ fontWeight: 800 }}>
             {entity.level} {entity.name}

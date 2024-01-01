@@ -1,5 +1,6 @@
 const { map } = require("../globals");
-const { getRandomInt } = require("../utils");
+const { createItem } = require("../item");
+const { getRandomInt, generateUniqueString } = require("../utils");
 
 const MAP_REFRESH_RATE_IN_MS = 220;
 
@@ -252,7 +253,7 @@ class Entity {
 
     if (isCrit) {
       // Apply critical damage multiplier (you can adjust this multiplier)
-      damage *= 2;
+      damage = damage * 1.5;
     }
 
     // Apply defense reduction
@@ -351,10 +352,33 @@ class Entity {
     this.level = Math.floor(Math.sqrt(this.experience) / 2) + 1;
   }
 
-  addItem(item) {
-    console.log("Adding an item to inventory", item);
+  addItem({ name, amount = 1 }) {
+    const item = createItem(name, amount);
     item.equiped = false;
-    this.inventory.push(item);
+
+    const existingItemIndex = this.inventory.findIndex(
+      (i) => i.name === item.name && i.amount < item.maxStack
+    );
+
+    if (existingItemIndex !== -1) {
+      this.inventory[existingItemIndex].amount += amount;
+
+      // Check if the stack exceeds the maximum
+      if (this.inventory[existingItemIndex].amount > item.maxStack) {
+        const overflowAmount =
+          this.inventory[existingItemIndex].amount - item.maxStack;
+        this.inventory[existingItemIndex].amount = item.maxStack;
+
+        // Create a new item for the overflow
+        const overflowItem = { ...item, amount: overflowAmount };
+        this.inventory.push(overflowItem);
+      }
+    } else {
+      this.inventory.push(item);
+    }
+
+    console.log("Adding an item to inventory", item);
+
     this.connection.addItem(this.id, item);
     this.connection.updateInventory(this.id, this.inventory);
   }
@@ -444,6 +468,9 @@ class Entity {
 
   removeInventory() {
     this.inventory = [];
+  }
+
+  emitInventory() {
     this.connection.updateInventory(this.id, this.inventory);
   }
 
