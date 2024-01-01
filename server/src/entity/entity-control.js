@@ -74,13 +74,13 @@ class EntityControl {
       if (this.lastState === newState || !this.enabled) return;
       this.lastState = newState;
 
-
+      console.log('newState', newState)
       if ([STATE.IDLE].includes(newState)) {
         this.handlePathingActions();
         this.handleBasicActions();
       }
-      if ([STATE.ATTACKING].includes(newState)) {
-        this.handleCombatActions();
+      if ([STATE.GATHERING, STATE.ATTACKING].includes(newState)) {
+        this.resetBasicActionsInterval()
       }
       if ([STATE.MOVING].includes(newState)) {
         this.handleBasicActions();

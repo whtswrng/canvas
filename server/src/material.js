@@ -12,7 +12,7 @@ class Material {
     _static,
     dropItem,
     level = 1,
-    requiredWeaponKind,
+    secondaryClass,
     map,
   }) {
     this.name = name;
@@ -23,7 +23,7 @@ class Material {
     (this.level = level), (this.respawnInS = respawnInS);
     this.harvested = false;
     this.dropItem = dropItem;
-    this.requiredWeaponKind = requiredWeaponKind;
+    this.secondaryClass = secondaryClass;
     this.map = map;
   }
 
@@ -32,7 +32,12 @@ class Material {
   }
 
   harvest(weapon) {
-    if (this.requiredWeapon && weapon.kind !== this.requiredWeaponKind) return;
+    console.log('=======================')
+    console.log(weapon)
+    if (this.secondaryClass && weapon?.secondaryClass !== this.secondaryClass)
+      throw new Error(
+        `Cannot harvest object without ${this.secondaryClass} weapon.`
+      );
     if (this.hp <= 0) {
       this.map.removeMaterial(this.x, this.y);
       this.respawn();

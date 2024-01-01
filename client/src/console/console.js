@@ -16,26 +16,33 @@ const Console = () => {
     // });
 
     const listener = socket.on("TAKE_DAMAGE", ({ damage, from, to }) => {
-      setLogs((logs) => [
-        ...logs,
-        {
-          sentiment: 2,
-          msg: `Player ${to.name} took ${damage} damage from ${from.name}.`,
-          timestamp: getTimestamp(),
-        },
-      ]);
+      addLog({
+        sentiment: 2,
+        msg: `Player ${to.name} took ${damage} damage from ${from.name}.`,
+      });
     });
 
     socket.on("ENEMY_HIT", ({ playerId, playerName, enemy, damage }) => {
-      setLogs((logs) => [
-        ...logs,
-        {
-          sentiment: 4,
-          msg: `Player ${playerName} hit ${enemy.name} for ${damage} damage.`,
-          timestamp: getTimestamp(),
-        },
-      ]);
+      addLog({
+        sentiment: 4,
+        msg: `Player ${playerName} hit ${enemy.name} for ${damage} damage.`,
+      });
     });
+
+    socket.on("ADD_ITEM", ({ playerId, playerName, item }) => {
+      addLog({
+        sentiment: 5,
+        msg: <span>Item {item.name} was added {item.amount}x to inventory.</span>,
+      });
+    });
+
+    socket.on("ERROR_MESSAGE", ({ playerId, msg }) => {
+      addLog({
+        sentiment: 1,
+        msg,
+      });
+    });
+
     return () => {
       socket.off("TAKE_DAMAGE", listener);
     };
@@ -51,6 +58,13 @@ const Console = () => {
 
     scrollConsole();
   }, [logs]); // Trigger the effect when new events arrive
+
+  function addLog(messageObject) {
+    setLogs((logs) => [
+      ...logs,
+      { ...messageObject, timestamp: getTimestamp() },
+    ]);
+  }
 
   const handleToggleScroll = () => {
     setAutoScroll(!autoScroll);

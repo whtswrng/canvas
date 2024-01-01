@@ -28,7 +28,7 @@ const App = () => {
   const layout = [
     { i: "a", x: 0, y: 0, w: 12, h: 20, static: true }, // Adjusted height for CharacterList
     // { i: 'b', x: 6, y: 0, w: 6, h: 14, static: true},  // Adjusted height for CodeEditor
-    { i: "c", x: 13, y: 0, w: 4, h: 12, static: true }, // Adjusted height for EmptyDiv
+    { i: "c", x: 13, y: 0, w: 4, h: 20, static: true }, // Adjusted height for EmptyDiv
   ];
   return (
     <ControlsProvider>

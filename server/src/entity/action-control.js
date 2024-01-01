@@ -4,7 +4,7 @@ class ActionControl {
   constructor(control, entity) {
     this.control = control;
     this.entity = entity;
-    this.selectedEntity = null;
+    this.conditionResult = null;
   }
 
   isConditionMet() {
@@ -16,16 +16,26 @@ class ActionControl {
       return true;
 
     const attr = {
-      ifHp: () => this.entity.hp,
-      ifTargetLvl: () => {
+      ifHp: (operatorFn, compValue) => operatorFn(compValue, this.entity.hp),
+      ifTargetLvl: (operatorFn, compValue) => {
         const type = this.entity.type === "mob" ? "player" : "mob";
         const enemy = this.entity.getClosestTarget(type, 6);
-        if (enemy) {
-          this.selectedEntity = enemy;
-          console.log("here", enemy.level);
-          return enemy.level;
+        if (enemy && operatorFn(compValue, enemy.level)) {
+          return enemy;
         }
         return null;
+      },
+      ifTargetName: (operatorFn, compValue) => {
+        if (this.control.actionType === "gatherObject") {
+          const materials = this.entity.getNearbyMaterials();
+
+          for (const m of materials) {
+            if (operatorFn(m.name, compValue)) {
+              this.conditionResult = m;
+              return m;
+            }
+          }
+        }
       },
     };
     const operator = {
@@ -39,16 +49,19 @@ class ActionControl {
       // TODO convert %!
     }
 
-    return operator[this.control.conditionValue](
-      compValue,
-      attr[this.control.condition]()
+    const result = attr[this.control.condition](
+      operator[this.control.conditionValue],
+      compValue
     );
+    this.conditionResult = result;
+    return !!result;
   }
 
   execute() {
     const actions = {
       goToPosition: this.execGoTo.bind(this),
       attackEnemy: this.attack.bind(this),
+      gatherObject: this.gatherObject.bind(this),
     };
     actions[this.control.actionType]?.();
   }
@@ -60,9 +73,15 @@ class ActionControl {
   }
 
   attack() {
-    if (!this.selectedEntity) return;
-    this.entity.attackEnemy(this.selectedEntity);
-    this.selectedEntity = null;
+    if (!this.conditionResult) return;
+    this.entity.attackEnemy(this.conditionResult);
+    this.conditionResult = null;
+  }
+
+  gatherObject() {
+    if (!this.conditionResult) return;
+    this.entity.gather(this.conditionResult.x, this.conditionResult.y);
+    this.conditionResult = null;
   }
 }
 

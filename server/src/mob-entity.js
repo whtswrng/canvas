@@ -1,6 +1,5 @@
 const { Connection } = require("./connection");
 const { Entity, STATE } = require("./entity/entity");
-const { map } = require("./globals");
 const { getRandomInt, generateUniqueString } = require("./utils");
 
 const mockedSocket = {

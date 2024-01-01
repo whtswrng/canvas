@@ -1,8 +1,8 @@
-const { map } = require("./globals");
 const { MobEntity } = require("./mob-entity");
 const { createTree } = require("./game-map");
 const { Material } = require("./material");
 const { EntityControl } = require("./entity/entity-control");
+const { map } = require("./globals");
 
 const tree = new Material({
   type: "tree",
@@ -13,7 +13,8 @@ const tree = new Material({
   respawnInS: 5,
   bg: "green",
   _static: true,
-  dropItem: "logs",
+  dropItem: "Oak Log",
+  secondaryClass: 'lumberjack',
   map,
 });
 tree.placeMaterial();

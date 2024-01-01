@@ -30,7 +30,7 @@ async function init() {
     const connection = new Connection(socket, map);
     const player = new Entity({
       id: getRandomInt(0, 1000000),
-      name: "Player",
+      name: "Lolek",
       hp: 100,
       kind: "light-mage",
       mana: 50,
@@ -41,17 +41,20 @@ async function init() {
       map,
       inventory: [
         {
+          id: 1,
+          name: "Hands of Aros",
           type: "hands",
           equiped: true,
-          name: "Hands of Aros",
+          amount: 1,
           attrs: { hp: 10, mana: 10, power: 2, defense: 10 },
         },
         {
-          type: "weapon",
-          kind: "axe",
+          id: 2,
+          name: "Simple axe",
+          type: "secondary",
+          secondaryClass: "lumberjack",
+          amount: 1,
           equiped: true,
-          name: "Harvesting tool",
-          attrs: { hp: 10, mana: 10, power: 2, defense: 10 },
         },
       ],
     });
@@ -71,6 +74,14 @@ async function init() {
         condition: "ifTargetLvl",
         conditionValue: "isLowerThan",
         conditionComparisonValue: "99",
+      },
+      {
+        type: "basic",
+        actionType: "gatherObject",
+        actionValue: "",
+        condition: "ifTargetName",
+        conditionValue: "isEqual",
+        conditionComparisonValue: "Tall tree",
       },
       {
         type: "pathing",
@@ -111,7 +122,7 @@ async function init() {
     });
 
     socket.on("FORCE_INVENTORY_UPDATED", (data) => {
-      player.emitInventory()
+      player.emitInventory();
     });
 
     // Handle messages from clients

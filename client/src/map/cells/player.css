@@ -29,6 +29,10 @@
 }
 
 .player-container.gathering::before {
+  border-color: rgba(0, 255, 34, 0.538);
+}
+
+.player-container.gathering::before {
   /* border-color: red; */
 }
 

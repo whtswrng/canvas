@@ -64,6 +64,10 @@ class Connection {
     });
   }
 
+  emitError(id, msg) {
+    this.emit("ERROR_MESSAGE", { playerId: id, msg });
+  }
+
   updateInventory(id, inventory) {
     this.emit("INVENTORY_UPDATED", { playerId: id, inventory });
   }

@@ -46,6 +46,7 @@ class Entity {
       weapon: null,
       hands: null,
       boots: null,
+      secondary: null,
     };
     this.inventory = inventory;
     this.speed = speed;
@@ -65,6 +66,7 @@ class Entity {
     this.x = 0;
     this.y = 0;
 
+    console.log(this.inventory);
     this.startEmitMap();
     this.calculateLevel();
     this.equipItemsInInventory();
@@ -78,8 +80,10 @@ class Entity {
   }
 
   equipItemsInInventory() {
+    console.log("hehe");
     for (const o of this.inventory) {
-      if (o.equip) {
+      console.log("iterating", o);
+      if (o.equiped) {
         this.equip(o);
       }
     }
@@ -110,10 +114,11 @@ class Entity {
 
   equip(item) {
     item.equiped = true;
-    const equipedItem = this.equip[item.type];
+    const equipedItem = this.equiped[item.type];
     if (equipedItem) equipedItem.equiped = false;
     this.equiped[item.type] = item;
 
+    console.log("Item equipped", this.equipped);
     const attrs = this.getAttrs();
     this.maxHp = attrs.hp;
     this.maxMana = attrs.hp;
@@ -151,26 +156,43 @@ class Entity {
     });
   }
 
-  async gather(x, y, cb) {
-    console.log("---=============THERE BAYBE");
-    this.changeState(STATE.GATHERING);
-    await this.goToPosition(x, y);
-    return new Promise((res) => {
-      if (this.harvestingInterval) clearInterval(this.harvestingInterval);
+  async gather(x, y) {
+    console.log("START GATHERING BOYS", x, y);
+    console.trace();
+    const handleAttack = () => {
+      clearInterval(this.harvestingInterval);
       this.harvestingInterval = setInterval(() => {
-        const o = this.map.getObject(x, y);
-        if (o.material) {
-          const drop = o.material.harvest();
-          if (drop) {
-            this.addItem(drop);
-          }
-          if (!o.material) {
-            clearInterval(this.harvestingInterval);
-            res();
-          }
+        const material = this.map.getObject(x, y)?.material;
+        if (!material || material.harvested || this.isDead()) {
+          return stop();
         }
-      }, 800);
-    });
+        if (this.isMaterialInRange(material)) {
+          try {
+            const drop = material.harvest(this.equiped.secondary);
+            if (drop) {
+              this.addItem(drop);
+              return stop();
+            }
+          } catch (e) {
+            this.connection.emitError(this.id, e.message);
+            return stop();
+          }
+        } else {
+          const { x, y } = material;
+          this.goToPosition(x, y);
+        }
+      }, 1000);
+    };
+
+    const stop = () => {
+      this.target = null;
+      clearInterval(this.harvestingInterval);
+      this.stopAll();
+    };
+
+    this.changeState(STATE.GATHERING);
+
+    handleAttack();
   }
 
   changeState(state) {
@@ -199,7 +221,7 @@ class Entity {
         }
         console.log(this.name, this.isEnemyInRange(enemy));
         if (this.isEnemyInRange(enemy)) {
-          this.doAttack(enemy);
+          this.hitEnemy(enemy);
         } else {
           const { x, y } = enemy;
           this.goToPosition(x, y);
@@ -236,7 +258,13 @@ class Entity {
     );
   }
 
-  doAttack(enemy) {
+  isMaterialInRange(enemy) {
+    return (
+      Math.floor(this.calculateDistance(this.x, this.y, enemy.x, enemy.y)) <= 1
+    );
+  }
+
+  hitEnemy(enemy) {
     if (enemy.isDead() || this.isDead()) return;
     console.log("dealing dmg -> ", this.name, enemy.name);
     this.stopMovement();
@@ -322,6 +350,22 @@ class Entity {
     return closestTarget;
   }
 
+  getNearbyMaterials(range = 7) {
+    const playerMap = this.map.getEntityMap(this, range);
+    const materials = [];
+
+    // Iterate through the player's map
+    for (let y = 0; y < playerMap.length; y++) {
+      for (let x = 0; x < playerMap[y].length; x++) {
+        const cell = playerMap[y][x];
+        if (cell.material) {
+          materials.push(cell.material);
+        }
+      }
+    }
+    return materials;
+  }
+
   calculateDistance(x1, y1, x2, y2) {
     return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
   }
@@ -398,12 +442,12 @@ class Entity {
     };
 
     if (this.hp == 0) return;
-    console.log(
-      "Start to move!",
-      this.name,
-      [this.x, this.y],
-      this.targetLocation
-    );
+    // console.log(
+    //   "Start to move!",
+    //   this.name,
+    //   [this.x, this.y],
+    //   this.targetLocation
+    // );
     // Adjust the entity's position based on the vector and speed
     if (this.movingInterval) clearInterval(this.movingInterval);
     if (!this.targetLocation) return finish();
