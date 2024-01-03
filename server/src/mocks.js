@@ -98,6 +98,7 @@ function createPlayer(name, socket, x, y) {
   inventory.addItem({ name: "Oak Log", amount: 10 });
   inventory.addItem({ name: "Oak Log", amount: 10 });
   inventory.addItem({ name: "Oak Log", amount: 10 });
+  inventory.addItem({ name: "Common defense potion", amount: 4 });
 
   const p = new Entity({
     id: entityId,

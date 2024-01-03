@@ -16,6 +16,10 @@
   height: 55px;
 }
 
+.inventory-item.usable {
+  cursor: pointer;
+}
+
 .inventory-item img {
   max-width: 100%;
   height: auto;

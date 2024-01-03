@@ -31,7 +31,8 @@ export const ControlPanel = ({ playerId }) => {
           </select>
         </div>
       )}
-      {/* <Control
+
+      <Control
         type="combat"
         title="Combat actions"
         conditionOptions={[{ value: "ifHp", label: "If my hp is" }]}
@@ -40,9 +41,9 @@ export const ControlPanel = ({ playerId }) => {
           { value: "isLowerThan", label: "Lower" },
           { value: "isHigherThan", label: "Higher" },
         ]}
-        actionTypes={[{ value: "useSpell", label: "Use spell" }]}
-        valueOptions={[{ value: "spell 1", label: "Spell 1" }]}
-      /> */}
+        actionTypes={[{ value: "useItem", label: "Use item" }]}
+        valueOption={true}
+      />
 
       <Control
         playerId={playerId}
@@ -87,6 +88,7 @@ export const ControlPanel = ({ playerId }) => {
         ]}
         valueOption={true}
       />
+
     </div>
   );
 };

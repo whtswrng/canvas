@@ -124,6 +124,7 @@ class MobEntity extends Entity {
     const o = this.map.getObject(this.x, this.y);
     if(o.occupiedBy || o.material) return setTimeout(() => this.spawn(), 4000);
 
+    this.initRegenInterval();
     this.map.placeEntity(this.x, this.y, this);
     this.changeState(STATE.IDLE);
   }

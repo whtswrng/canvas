@@ -7,6 +7,7 @@ import { ControlPanel } from "./control-panel/control-panel";
 import { Entity } from "../map/cells/entity";
 import { Inventory } from "./inventory/inventory";
 import { Interaction } from "./interaction/interaction";
+import { Effects } from "./effects/effects";
 
 export const Character = ({ character: defaultChar }) => {
   const { name } = defaultChar;
@@ -38,11 +39,11 @@ export const Character = ({ character: defaultChar }) => {
   const updatedMana = basicAttrsUpdated?.attrs?.mana;
 
   const hp = updatedHp !== undefined ? updatedHp : defaultChar.hp;
-  const maxHp = _attrs?.hp || defaultChar.maxHp;
+  const maxHp = _attrs?.attrs?.hp || defaultChar.attrs.hp;
   const mana = updatedMana !== undefined ? updatedMana : defaultChar.mana;
-  const maxMana = _attrs?.mana || defaultChar.maxMana;
+  const maxMana = _attrs?.attrs?.mana || defaultChar.attrs.mana;
 
-  const attrs = _attrs || defaultChar.attrs;
+  const attrs = _attrs?.attrs || defaultChar.attrs;
 
   const currentTarget = getCurrentTarget();
 
@@ -98,6 +99,8 @@ export const Character = ({ character: defaultChar }) => {
           </div>
         </div>
 
+
+        <Effects playerId={playerId}/>
         <UserActions />
 
         <div className="actions">

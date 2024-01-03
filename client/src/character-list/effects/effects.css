@@ -1,0 +1,10 @@
+.effects {
+  float: right;
+  width: 263px;
+}
+
+
+.effects .item {
+    width: 30px;
+    height: 30px;
+}

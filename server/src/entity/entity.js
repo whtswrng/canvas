@@ -4,6 +4,7 @@ const { createItem } = require("../item");
 const { getRandomInt, generateUniqueString } = require("../utils");
 
 const MAP_REFRESH_RATE_IN_MS = 120;
+const REGEN_INTERVAL = 2000;
 
 const STATE = {
   ATTACKING: "ATTACKING",
@@ -53,6 +54,7 @@ class Entity {
       boots: null,
       secondary: null,
     };
+    this.effects = [];
     this.inventory = inventory;
     this.speed = speed;
     this.level = 1;
@@ -76,8 +78,88 @@ class Entity {
 
     this.startEmitMap();
     this.calculateLevel();
-    this.equipItemsInInventory();
     this.connection.entityInit(this);
+    this.equipItemsInInventory();
+
+    // init
+    // additional effects
+    // use item
+    // die -> reset interval
+    // attrs calculate update
+
+    this.initRegenInterval();
+  }
+
+  applyItemEffect(item) {
+    const i = this.effects.findIndex((e) => e.name === item.name);
+    console.log(i);
+    if (i !== -1) return false; // not going to apply same effect
+
+    this.effects.push({
+      type: "item",
+      name: item.name,
+      attrs: item.effect.attrs,
+      expireInMinutes: item.effect.expireInMinutes,
+    });
+
+    setTimeout(() => {
+      const i = this.effects.findIndex((e) => e.name === item.name);
+      if (i !== -1) {
+        this.effects.splice(i);
+      }
+      this.connection.updateEffects(this.effects);
+      this.emitAttributes();
+    }, item.effect.expireInMinutes * 60000);
+
+    this.connection.updateEffects(this.effects);
+    this.emitAttributes();
+
+    return true;
+  }
+
+  emitAttributes() {
+    this.connection.attributesUpdated(this.getAttrs());
+  }
+
+  useItem(itemId) {
+    const item = this.inventory.getItemById(itemId);
+    if (!item || !item.usable) return;
+
+    if (this.applyItemEffect(item)) {
+      this.removeItems([{ name: item.name, amount: 1 }]);
+    }
+  }
+
+  useItemByName(itemName) {
+    const item = this.inventory.getItemByName(itemName);
+    this.useItem(item);
+  }
+
+  initRegenInterval() {
+    this.regenInterval = setInterval(() => {
+      if (this.state === STATE.IDLE) this.regenerate();
+    }, REGEN_INTERVAL);
+  }
+
+  regenerate() {
+    const attrs = this.getAttrs();
+
+    const hpRegen = Math.round(attrs.hpRegeneration / 4);
+    const manaRegen = Math.round(attrs.manaRegeneration / 4);
+
+    this.hp += hpRegen;
+    this.mana += manaRegen;
+
+    if (this.hp > attrs.hp) {
+      this.hp = attrs.hp;
+    }
+
+    if (this.mana > attrs.mana) {
+      this.mana = attrs.mana;
+    }
+
+    // Update the client or perform any other necessary actions
+    this.connection.basicAttrsUpdated({ hp: this.hp, mana: this.mana });
   }
 
   startEmitMap() {
@@ -111,7 +193,9 @@ class Entity {
   getAttrs() {
     const attrs = {
       hp: 120,
+      hpRegeneration: 5,
       mana: 100,
+      manaRegeneration: 5,
       defense: 6,
       power: 30,
       critChance: 5,
@@ -127,6 +211,15 @@ class Entity {
         }
       }
     }
+    for (const effect of this.effects) {
+      if (effect.attrs) {
+        for (const key in effect.attrs) {
+          console.log(effect.attrs);
+          attrs[key] += effect.attrs[key];
+        }
+      }
+    }
+    // effects
     return attrs;
   }
 
@@ -152,14 +245,13 @@ class Entity {
 
     console.log("Item equipped", this.equipped);
     const attrs = this.getAttrs();
-    this.maxHp = attrs.hp;
-    this.maxMana = attrs.hp;
+    // this.maxHp = attrs.hp;
+    // this.maxMana = attrs.hp;
     this.connection.equippedItemsUpdated(this.equiped);
     this.connection.attributesUpdated(attrs);
   }
 
   equipItemsInInventory() {
-    console.log("hehe");
     for (const item of this.inventory.getItems()) {
       if (item.equiped) {
         this.equip(item);
@@ -169,19 +261,16 @@ class Entity {
   }
 
   addItem(item) {
-    console.log("item", item);
     this.inventory.addItem(item);
-    this.connection.addItem(item);
-    this.connection.updateInventory(this.inventory.getItems());
   }
 
   hasItems(items) {
     return this.inventory.hasItems(items);
   }
 
-  removeItem(item) {
-    this.inventory.removeItem(item);
-    this.connection.updateInventory(this.inventory.getItems());
+  removeItems(items) {
+    console.log("removing items", items);
+    this.inventory.removeItems(items);
   }
 
   // getDirectionsToTarget(targetX, targetY) {
@@ -703,13 +792,14 @@ class Entity {
     console.log("removing eneity", this.name);
     this.map.removeEntity(this.x, this.y);
     const drops = [];
-    for (const i of this.inventory) {
+    for (const i of this.inventory.getItems()) {
       if (getRandomInt(0, 100) <= 30) {
         drops.push({ ...i });
       }
     }
     this.connection.die();
     this.changeState(STATE.DEATH);
+    clearInterval(this.regenInterval);
     return drops;
   }
 

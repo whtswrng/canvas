@@ -33,6 +33,7 @@ class EntityControl {
     this.entity = entity;
     this.controls = controls;
     this.basicActionsInterval = null;
+    this.combatActionsInterval = null;
     this.lastPathIndex = -1;
     this.lastSpellIndex = -1;
     this.lastState = null;
@@ -85,6 +86,9 @@ class EntityControl {
         this.handlePathingActions();
         this.handleBasicActions();
       }
+      if ([STATE.ATTACKING].includes(newState)) {
+        this.handleCombatActions();
+      }
       if ([STATE.GATHERING, STATE.ATTACKING, STATE.DEATH].includes(newState)) {
         this.resetIntervals();
       }
@@ -96,8 +100,9 @@ class EntityControl {
 
   resetIntervals() {
     clearInterval(this.basicActionsInterval);
+    clearInterval(this.combatActionsInterval);
     this.basicActionsInterval = null;
-    this.pathingInterval = null;
+    this.combatActionsInterval = null;
   }
 
   handlePathingActions() {
@@ -141,6 +146,21 @@ class EntityControl {
       }
     }, 200);
   }
+
+  handleCombatActions() {
+    if (this.combatActionsInterval) return;
+    this.combatActionsInterval = setInterval(() => {
+      const controls = this.controls.filter((c) => c.type === "combat");
+
+      for (const c of controls) {
+        const a = new ActionControl(c, this.entity);
+        if (a.isConditionMet()) {
+          a.execute();
+        }
+      }
+    }, 200);
+  }
+
 }
 
 module.exports = {

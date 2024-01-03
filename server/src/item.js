@@ -17,6 +17,21 @@ const items = {
     description: "Ancient material from the sun",
     type: "material",
   },
+  "Common defense potion": {
+    name: "Common defense potion",
+    rarity: "common",
+    stackable: true,
+    maxStack: 10,
+    description: "Just a basic potion",
+    type: "material",
+    usable: true,
+    effect: {
+      expireInMinutes: 1,
+      attrs: {
+        defense: 10
+      }
+    }
+  },
   "Oak Log": {
     name: "Oak Log",
     rarity: "common",

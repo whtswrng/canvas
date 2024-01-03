@@ -38,7 +38,7 @@ export const Interaction = ({ playerId, data: _data }) => {
               {option.requirements?.map((r) => {
                 if (r.type === "item")
                   return (
-                    <div className="interaction-option-item">
+                    <div className="interaction-option-item" style={{opacity: r.fulfilled ? 1 : 0.55}}>
                       <Item item={r.item} />
                     </div>
                   );

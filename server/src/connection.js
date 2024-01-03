@@ -67,9 +67,7 @@ class Connection {
       name: player.name,
       level: player.level,
       hp: player.hp,
-      maxHp: player.maxHp,
       mana: player.mana,
-      maxMana: player.maxMana,
       attrs: player.getAttrs(),
       inventory: player.inventory.getItems(),
     });
@@ -77,6 +75,10 @@ class Connection {
 
   emitError(msg) {
     this.emit("ERROR_MESSAGE", { playerId: this.id, msg });
+  }
+
+  updateEffects(effects) {
+    this.emit("PLAYER_EFFECTS", { playerId: this.id, effects });
   }
 
   updateInventory(inventory) {

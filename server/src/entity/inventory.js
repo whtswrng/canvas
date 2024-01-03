@@ -24,7 +24,8 @@ class Inventory {
       this.items.push({ ...item });
     }
 
-    this.connection.addItem({name, amount});
+    this.connection.addItem({ name, amount });
+    this.connection.updateInventory(this.getItems());
   }
 
   hasItems(items) {
@@ -47,21 +48,25 @@ class Inventory {
       this._removeItem(i);
     }
 
-    // update db
+    this.connection.updateInventory(this.getItems());
   }
 
   _removeItem({ name, amount }) {
     let amountLeft = amount;
+    const itemsToRemove = [];
 
     for (const i of this.items) {
       if (i.name === name) {
-        if (amountLeft - i.amount > 0) {
+        if (amountLeft - i.amount >= 0) {
           amountLeft -= i.amount;
-          this._removeItemById(id);
+          itemsToRemove.push(i.id);
         } else {
           i.amount -= amountLeft;
         }
       }
+    }
+    for (const id of itemsToRemove) {
+      this._removeItemById(id);
     }
   }
 
@@ -74,6 +79,14 @@ class Inventory {
 
   getItems() {
     return this.items;
+  }
+
+  getItemById(id) {
+    return this.items.find((i) => i.id === id);
+  }
+
+  getItemByName(name) {
+    return this.items.find((i) => i.name === name);
   }
 }
 

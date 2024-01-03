@@ -1,30 +1,28 @@
 const { createItem } = require("../item");
 
+function createItemOption(entity, item, requirementItems) {
+  return {
+    type: "item",
+    item: item,
+    requirements: requirementItems.map((i) => ({
+      type: "item",
+      fulfilled: entity.hasItems([i]),
+      item: i,
+    })),
+  };
+}
+
 class ShopInteraction {
   generateData(entity) {
     this.data = {
       options: [
-        {
-          type: "item",
-          item: createItem("Varnish", 1),
-          requirements: [
-            {
-              type: "item",
-              item: createItem("Silver", 30),
-            },
-          ],
-        },
-        {
-          type: "item",
-          item: createItem("Varnish", 5),
-          requirements: [
-            {
-              type: "item",
-              fulfilled: entity.hasItems([{ name: "Oak Log", amount: 22 }]),
-              item: createItem("Oak Log", 22),
-            },
-          ],
-        },
+        createItemOption(entity, createItem("Varnish", 1), [
+          createItem("Silver", 10),
+        ]),
+        createItemOption(entity, createItem("Varnish", 5), [
+          createItem("Oak Log", 10),
+          createItem("Varnish", 10),
+        ]),
       ],
       description:
         "You can buy a lot of interesting stuff in my place my friend!",
@@ -41,8 +39,8 @@ class ShopInteraction {
     const requirementItems = selectedOption.requirements.map((r) => r.item);
     if (!item) return;
 
-    console.log("here baybe==========================");
     if (entity.hasItems(requirementItems)) {
+      entity.removeItems(requirementItems);
       entity.addItem(item);
     }
   }

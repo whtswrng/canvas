@@ -38,6 +38,14 @@ class User {
       if (p) p.control.setControls(list);
     });
 
+    this.socket.on("USE_ITEM", ({ playerId, itemId }) => {
+      const p = this.playersWithControls.find(
+        ({ player }) => player.id === playerId
+      );
+      console.log('using item', itemId)
+      if (p) p.player.useItem(itemId);
+    });
+
     this.socket.on("FORCE_INVENTORY_UPDATED", (data) => {
       for (const p of this.playersWithControls) {
         p.player.emitInventory();

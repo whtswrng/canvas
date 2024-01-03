@@ -63,6 +63,7 @@ class ActionControl {
       followPlayer: this.follow.bind(this),
       attackEnemy: this.attack.bind(this),
       gatherObject: this.gatherObject.bind(this),
+      useItem: this.useItem.bind(this),
       attackFriendlyTarget: this.attackFriendlyTarget.bind(this),
     };
     actions[this.control.actionType]?.();
@@ -70,6 +71,11 @@ class ActionControl {
 
   attackFriendlyTarget() {
     this.entity.attackFriendlyTarget(this.control.actionValue);
+  }
+
+  useItem() {
+    console.log('uSING ITEM!!!', this.control)
+    this.entity.useItemByName(this.control.actionValue);
   }
 
   follow() {
@@ -86,7 +92,7 @@ class ActionControl {
     if (!this.conditionResult) {
       const type = this.entity.type === "mob" ? "player" : "mob";
       this.conditionResult = this.entity.getClosestTarget(type);
-      if(! this.conditionResult) return; // no enemy found
+      if (!this.conditionResult) return; // no enemy found
     }
     this.entity.attackEnemy(this.conditionResult);
     this.conditionResult = null;
