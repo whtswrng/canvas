@@ -1,29 +1,38 @@
 .map-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); /* Adjust column width as needed */
-    gap: 0px; /* Adjust gap between cells as needed */
-  }
-  
-  .map-row {
-    display: flex;
-  }
-  
-  .map-cell {
-    flex: 1;
-    height: 40px; /* Adjust cell height as needed */
-    box-sizing: border-box;
-    border-left: 0.1px solid black;
-    border-top: 0.1px solid black;
-  }
-  
-  /* Customize styling for different cell types */
-  .map-cell.ground {
-    background-color: #a0a0a0;
-  }
-  
-  .map-cell.water {
-    background-color: #66a3ff;
-  }
-  
-  /* Add more styling for other cell types as needed */
-  
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(40px, 1fr)
+  ); /* Adjust column width as needed */
+  gap: 0px; /* Adjust gap between cells as needed */
+}
+
+.map-row {
+  display: flex;
+}
+
+.map-cell {
+  flex: 1;
+  height: 40px; /* Adjust cell height as needed */
+  box-sizing: border-box;
+  border-left: 0.1px solid black;
+  border-top: 0.1px solid black;
+}
+
+.map-cell:hover {
+  border-right: 0.1px solid;
+  border-bottom: 0.1px solid;
+  border-color: orange;
+  cursor: pointer;
+}
+
+/* Customize styling for different cell types */
+.map-cell.ground {
+  background-color: #a0a0a0;
+}
+
+.map-cell.water {
+  background-color: #66a3ff;
+}
+
+/* Add more styling for other cell types as needed */

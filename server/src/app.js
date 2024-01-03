@@ -1,11 +1,8 @@
 // Import required modules
 const express = require("express");
 const { map, app, io, server } = require("./globals");
-const { Connection } = require("./connection");
-const { Entity } = require("./entity/entity");
-const { getRandomInt } = require("./utils");
-const { enemy } = require("./mocks");
-const { EntityControl } = require("./entity/entity-control");
+const { User } = require("./user");
+const { createPlayer } = require("./mocks");
 require("./mocks");
 
 // Serve static files from the 'public' directory
@@ -27,115 +24,13 @@ async function init() {
   // Set up a connection event for new Socket.IO connections
   io.on("connection", (socket) => {
     console.log("A user connected");
-    const connection = new Connection(socket, map);
-    const player = new Entity({
-      id: getRandomInt(0, 1000000),
-      name: "Lolek",
-      hp: 100,
-      kind: "light-mage",
-      mana: 50,
-      speed: 0,
-      experience: 1,
-      attackRange: 4,
-      connection,
-      map,
-      inventory: [
-        {
-          id: 1,
-          name: "Hands of Aros",
-          type: "hands",
-          equiped: true,
-          amount: 1,
-          attrs: { hp: 10, mana: 10, power: 2, defense: 10 },
-        },
-        {
-          id: 2,
-          name: "Simple axe",
-          type: "secondary",
-          secondaryClass: "lumberjack",
-          amount: 1,
-          equiped: true,
-        },
-      ],
-    });
-    const controls = [
-      {
-        type: "autoDefend",
-        actionValue: true,
-      },
-      {
-        type: "controls",
-        actionValue: true,
-      },
-      {
-        type: "basic",
-        actionType: "attackEnemy",
-        actionValue: "",
-        condition: "ifTargetLvl",
-        conditionValue: "isLowerThan",
-        conditionComparisonValue: "99",
-      },
-      {
-        type: "basic",
-        actionType: "gatherObject",
-        actionValue: "",
-        condition: "ifTargetName",
-        conditionValue: "isEqual",
-        conditionComparisonValue: "Tall tree",
-      },
-      {
-        type: "pathing",
-        actionType: "goToPosition",
-        actionValue: "5 9",
-        condition: "",
-        conditionValue: "",
-        conditionComparisonValue: "",
-      },
-      {
-        type: "pathing",
-        actionType: "goToPosition",
-        actionValue: "7 13",
-        condition: "",
-        conditionValue: "",
-        conditionComparisonValue: "",
-      },
-    ];
-    const entityControl = new EntityControl(player, controls);
-    player.placeEntity(5, 5); // Place the player at the center of the map
-    entityControl.init();
+    const user = new User(socket, [createPlayer('Ferda', socket, 2, 2), createPlayer('Blobko', socket, 5, 9)]);
+    user.init();
 
-    // player.attackEnemy(enemy)
-
-    // player.goToPosition(8, 9); // Place the player at the center of the map
-
-    // setInterval(printMap, 2000);
-
-    function printMap() {
-      console.log("--------------------------");
-      const playerMapView = map.getEntityMap(player);
-      map.print(playerMapView);
-    }
-
-    socket.on("UPDATE_CONTROLS", ({ playerId, list }) => {
-      console.log("============", list);
-      // entityControl.setControls(list);
-    });
-
-    socket.on("FORCE_INVENTORY_UPDATED", (data) => {
-      player.emitInventory();
-    });
-
-    // Handle messages from clients
-    socket.on("message", (data) => {
-      console.log("Message from client:", data);
-
-      // Broadcast the received message to all connected clients
-      io.emit("message", data);
-    });
-
-    // Handle disconnections
-    socket.on("disconnect", () => {
-      console.log("A user disconnected");
-    });
+    // function printMap() {
+    //   console.log("--------------------------");
+    //   const playerMapView = map.getEntityMap(player);
+    //   map.print(playerMapView);
+    // }
   });
 }

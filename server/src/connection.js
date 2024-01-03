@@ -1,14 +1,19 @@
 class Connection {
-  constructor(socket, map) {
+  constructor(id, socket, map) {
+    this.id = id;
     this.map = map;
     this.socket = socket;
+  }
+
+  on(event, data, cb) {
+    return this.socket.on(event, data, cb);
   }
 
   emit(event, data) {
     this.socket.emit(event, data);
   }
 
-  updateMap(id, m) {
+  updateMap(m) {
     const newMap = [];
 
     for (const row of m) {
@@ -19,6 +24,12 @@ class Connection {
           bg: cell.bg,
           x: cell.x,
           y: cell.y,
+          interactable: cell.interactable
+            ? {
+                name: cell.interactable.name,
+                description: cell.interactable.description,
+              }
+            : null,
           material: cell.material
             ? {
                 name: cell.material.name,
@@ -37,7 +48,7 @@ class Connection {
                 mana: cell.occupiedBy.mana,
                 maxMana: cell.occupiedBy.maxMana,
                 state: cell.occupiedBy.state,
-                kind: cell.occupiedBy.kind
+                kind: cell.occupiedBy.kind,
               }
             : null,
         });
@@ -45,7 +56,7 @@ class Connection {
       newMap.push(rows);
     }
     this.emit("MAP_UPDATED", {
-      playerId: id,
+      playerId: this.id,
       map: newMap,
     });
   }
@@ -60,80 +71,87 @@ class Connection {
       mana: player.mana,
       maxMana: player.maxMana,
       attrs: player.getAttrs(),
-      inventory: player.inventory,
+      inventory: player.inventory.getItems(),
     });
   }
 
-  emitError(id, msg) {
-    this.emit("ERROR_MESSAGE", { playerId: id, msg });
+  emitError(msg) {
+    this.emit("ERROR_MESSAGE", { playerId: this.id, msg });
   }
 
-  updateInventory(id, inventory) {
-    this.emit("INVENTORY_UPDATED", { playerId: id, inventory });
+  updateInventory(inventory) {
+    this.emit("INVENTORY_UPDATED", { playerId: this.id, inventory });
   }
 
-  equipedItemsUpdated(id, equipedItems) {
-    this.emit("EQUIPED_ITEMS_UPDATED", { playerId: id, equipedItems });
+  equipedItemsUpdated(equipedItems) {
+    this.emit("EQUIPED_ITEMS_UPDATED", { playerId: this.id, equipedItems });
   }
 
-  basicAttrsUpdated(id, attrs) {
-    this.emit("BASIC_ATTRIBUTES_UPDATED", { playerId: id, attrs });
+  basicAttrsUpdated(attrs) {
+    this.emit("BASIC_ATTRIBUTES_UPDATED", { playerId: this.id, attrs });
   }
 
-  attributesUpdated(id, attrs) {
-    this.emit("ATTRIBUTES_UPDATED", { playerId: id, attrs });
+  attributesUpdated(attrs) {
+    this.emit("ATTRIBUTES_UPDATED", { playerId: this.id, attrs });
   }
 
-  changeState(id, state) {
-    this.emit("CHANGE_STATE", { playerId: id, state });
+  changeState(state) {
+    this.emit("CHANGE_STATE", { playerId: this.id, state });
   }
 
-  addItem(id, item) {
-    this.emit("ADD_ITEM", { playerId: id, item });
+  addItem(item) {
+    this.emit("ADD_ITEM", { playerId: this.id, item });
   }
 
-  attackEnemy(id, enemy) {
+  attackEnemy(enemy) {
     this.emit("ATTACK_ENEMY", {
-      playerId: id,
+      playerId: this.id,
       enemy: { id: enemy.id, name: enemy.name },
     });
   }
 
-  takeDamage(id, dmg, from, to) {
+  sendInteractionData(data) {
+    this.emit("INTERACTION_DATA", {
+      playerId: this.id,
+      data,
+    });
+  }
+
+  takeDamage(dmg, from, to) {
     this.emit("TAKE_DAMAGE", {
-      playerId: id,
+      playerId: this.id,
       from: { name: from.name },
       to: { name: to.name },
       damage: dmg,
     });
   }
 
-  enemyHit(id, dmg, from, to) {
+  enemyHit(dmg, from, to) {
     this.emit("ENEMY_HIT", {
-      playerId: id,
+      playerId: this.id,
       playerName: from.name,
       damage: dmg,
       enemy: { id: to.id, name: to.name, hp: to.hp },
     });
   }
 
-  enemyDied(id, enemy) {
+  enemyDied(enemy) {
     this.emit("ENEMY_DIED", {
-      playerId: id,
+      playerId: this.id,
       enemy: { id: enemy.id, name: enemy.name },
     });
   }
 
-  gainExperience(id, exp) {
-    this.emit("GAIN_EXPERIENCE", { playerId: id, experience: exp });
+  gainExperience(exp) {
+    this.emit("GAIN_EXPERIENCE", { playerId: this.id, experience: exp });
   }
 
-  levelUp(id, newLevel) {
-    this.emit("LEVEL_UP", { playerId: id, newLevel });
+  levelUp(newLevel) {
+    this.emit("LEVEL_UP", { playerId: this.id, newLevel });
   }
 
-  die(id) {
-    this.emit("PLAYER_DIED", { playerId: id });
+  die() {
+    this.emit("PLAYER_DIED", { playerId: this.id });
   }
 }
 

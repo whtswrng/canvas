@@ -31,25 +31,23 @@ const App = () => {
     { i: "c", x: 13, y: 0, w: 4, h: 20, static: true }, // Adjusted height for EmptyDiv
   ];
   return (
-    <ControlsProvider>
-      <GridLayout
-        className="layout"
-        layout={layout}
-        cols={16}
-        rowHeight={30}
-        width={1600}
-      >
-        <div key="a" className="grid-item">
-          <CharacterList />
-        </div>
-        {/* <div key="b" className="grid-item">
+    <GridLayout
+      className="layout"
+      layout={layout}
+      cols={16}
+      rowHeight={30}
+      width={1600}
+    >
+      <div key="a" className="grid-item">
+        <CharacterList />
+      </div>
+      {/* <div key="b" className="grid-item">
         <CodeEditor />
       </div> */}
-        <div key="c" className="grid-item">
-          <Console />
-        </div>
-      </GridLayout>
-    </ControlsProvider>
+      <div key="c" className="grid-item">
+        <Console />
+      </div>
+    </GridLayout>
   );
 };
 

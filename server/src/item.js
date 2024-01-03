@@ -1,6 +1,14 @@
 const { generateUniqueString } = require("./utils");
 
 const items = {
+  Silver: {
+    name: "Silver",
+    rarity: "common",
+    stackable: true,
+    maxStack: 999999,
+    description: "Ancient coin from the moon",
+    type: "coin",
+  },
   Varnish: {
     name: "Varnish",
     rarity: "common",
@@ -13,9 +21,27 @@ const items = {
     name: "Oak Log",
     rarity: "common",
     stackable: true,
+    maxStack: 10,
+    description: "Just a basic wood",
+    type: "material",
+  },
+  "Hands of Aros": {
+    name: "Hands of Aros",
+    rarity: "common",
+    stackable: true,
     maxStack: 20,
     description: "Just a basic wood",
     type: "material",
+    attrs: { hp: 10, mana: 10, power: 2, defense: 10 },
+  },
+  "Simple axe": {
+    name: "Simple axe",
+    type: "secondary",
+    rarity: "common",
+    secondaryClass: "lumberjack",
+    stackable: true,
+    maxStack: 20,
+    description: "Just a basic wood",
   },
 };
 

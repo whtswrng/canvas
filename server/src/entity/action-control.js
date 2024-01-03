@@ -60,10 +60,20 @@ class ActionControl {
   execute() {
     const actions = {
       goToPosition: this.execGoTo.bind(this),
+      followPlayer: this.follow.bind(this),
       attackEnemy: this.attack.bind(this),
       gatherObject: this.gatherObject.bind(this),
+      attackFriendlyTarget: this.attackFriendlyTarget.bind(this),
     };
     actions[this.control.actionType]?.();
+  }
+
+  attackFriendlyTarget() {
+    this.entity.attackFriendlyTarget(this.control.actionValue);
+  }
+
+  follow() {
+    this.entity.followPlayer(this.control.actionValue);
   }
 
   execGoTo() {
@@ -73,7 +83,11 @@ class ActionControl {
   }
 
   attack() {
-    if (!this.conditionResult) return;
+    if (!this.conditionResult) {
+      const type = this.entity.type === "mob" ? "player" : "mob";
+      this.conditionResult = this.entity.getClosestTarget(type);
+      if(! this.conditionResult) return; // no enemy found
+    }
     this.entity.attackEnemy(this.conditionResult);
     this.conditionResult = null;
   }

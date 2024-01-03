@@ -21,3 +21,17 @@ export const useListen = (event, playerId, force) => {
 
   return { data, loading };
 };
+
+export const useFetch = (event, playerId = null) => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    socket.emit(event, {playerId}, (data) => {
+      setData(data)
+      setLoading(false)
+    });
+  }, []);
+
+  return { data, loading };
+};

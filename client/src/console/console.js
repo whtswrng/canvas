@@ -79,7 +79,8 @@ const Console = () => {
       <div className="logs-container" ref={consoleRef}>
         {logs.map((l) => (
           <div className={"log sentiment-" + l.sentiment}>
-            [{l.timestamp}] {l.msg}
+            <span style={{fontWeight: 200, marginRight: 5}}>[{l.timestamp}]</span> 
+            <span>{l.msg}</span>
           </div>
         ))}
       </div>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Attributes } from "./attributes";
 import { Map } from "../map/map";
 import { useListen } from "../listen";
@@ -6,6 +6,7 @@ import { UserActions } from "./user-actions/user-actions";
 import { ControlPanel } from "./control-panel/control-panel";
 import { Entity } from "../map/cells/entity";
 import { Inventory } from "./inventory/inventory";
+import { Interaction } from "./interaction/interaction";
 
 export const Character = ({ character: defaultChar }) => {
   const { name } = defaultChar;
@@ -17,9 +18,19 @@ export const Character = ({ character: defaultChar }) => {
     defaultChar.playerId
   );
   const { data: _attrs } = useListen("ATTRIBUTES_UPDATED", playerId);
+  const { data: interactionData } = useListen("INTERACTION_DATA", playerId);
   const { data: _stateData } = useListen("CHANGE_STATE", playerId);
   const { data: map } = useListen("MAP_UPDATED", playerId);
   const { data: enemyHit } = useListen("ENEMY_HIT", playerId);
+
+  useEffect(() => {
+  }, [_stateData]);
+
+  useEffect(() => {
+    if (interactionData) {
+      setState("interacting");
+    }
+  }, [interactionData]);
 
   const playerState = _stateData?.state;
 
@@ -55,7 +66,9 @@ export const Character = ({ character: defaultChar }) => {
             <span style={{ color: getStateColor() }}>{playerState}</span>
           </div>
           <div className="enemy-container">
-            {currentTarget && <Entity cell={{ occupiedBy: currentTarget }} tooltipOpen={true}/>}
+            {currentTarget && (
+              <Entity cell={{ occupiedBy: currentTarget }} tooltipOpen={true} />
+            )}
           </div>
         </div>
         <div className="character-details">
@@ -108,11 +121,14 @@ export const Character = ({ character: defaultChar }) => {
       </div>
       {state === "map" && (
         <div className="map-container">
-          <Map />
+          <Map playerId={playerId} />
         </div>
       )}
-      {state === "panel" && <ControlPanel />}
+      {state === "panel" && <ControlPanel playerId={playerId} />}
       {state === "inventory" && <Inventory playerId={playerId} />}
+      {state === "interacting" && (
+        <Interaction playerId={playerId} data={interactionData} />
+      )}
     </div>
   );
 
@@ -123,7 +139,7 @@ export const Character = ({ character: defaultChar }) => {
     return enemy;
 
     function findEntityInMap() {
-      if(!map?.map) return;
+      if (!map?.map) return;
       for (const row of map?.map) {
         for (const cell of row) {
           if (cell.occupiedBy?.id === enemyId) {

@@ -3,6 +3,7 @@ import { useControls } from "./controls-context";
 
 const Control = ({
   type,
+  playerId,
   conditionOptions,
   conditionValueOptions,
   actionTypes,
@@ -55,7 +56,7 @@ const Control = ({
   function getFormat(condition) {
     const o = conditionOptions.find((c) => c.value === condition);
     if (o && o.format !== undefined) return o.format;
-    return "%";
+    return "";
   }
 
   const ActionRow = ({ action, handleRemoveAction, conditionOptions }) => {
@@ -85,6 +86,10 @@ const Control = ({
     }
   };
 
+  function isDisabled() {
+    return !selectedAction;
+  }
+
   return (
     <div className="control-panel-item card">
       <h3>{title ?? type}</h3>
@@ -107,6 +112,7 @@ const Control = ({
               value={conditionValue}
               onChange={(e) => setConditionValue(e.target.value)}
             >
+              <option value="">Select condition</option>
               {conditionValueOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
@@ -159,7 +165,7 @@ const Control = ({
         </div>
       )}
       <div>
-        <button onClick={handleExecuteAction}>Create action</button>
+        <button onClick={handleExecuteAction} disabled={isDisabled()}>Create action</button>
       </div>
       <div className="action-list">
         {list.map((action, index) => (

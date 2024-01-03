@@ -39,12 +39,17 @@ class EntityControl {
     this.enabled = false;
   }
 
+  disconnect() {
+    this.entity.disconnect();
+    this.enabled = false;
+  }
+
   setControls(controls) {
     this.controls = controls;
     this.lastPathIndex = -1;
     this.lastSpellIndex = -1;
     this.lastState = null;
-    this.resetBasicActionsInterval()
+    this.resetIntervals();
     this.handleControls(this.entity.state);
     this.handleQuickControls();
   }
@@ -56,14 +61,15 @@ class EntityControl {
   }
 
   handleQuickControls() {
-    const autoDefendControl = this.controls.find((c) => c.type === 'autoDefend');
-    if(autoDefendControl) {
-      this.entity.autoDefend = Boolean(autoDefendControl.actionValue)
+    const autoDefendControl = this.controls.find(
+      (c) => c.type === "autoDefend"
+    );
+    if (autoDefendControl) {
+      this.entity.autoDefend = Boolean(autoDefendControl.actionValue);
     }
 
-    const controlsControl = this.controls.find((c) => c.type === 'controls');
-    console.log(controlsControl)
-    if(controlsControl) {
+    const controlsControl = this.controls.find((c) => c.type === "controls");
+    if (controlsControl) {
       this.enabled = controlsControl.actionValue;
     }
   }
@@ -74,13 +80,13 @@ class EntityControl {
       if (this.lastState === newState || !this.enabled) return;
       this.lastState = newState;
 
-      console.log('newState', newState)
+      console.log("newState", this.entity.name, newState);
       if ([STATE.IDLE].includes(newState)) {
         this.handlePathingActions();
         this.handleBasicActions();
       }
-      if ([STATE.GATHERING, STATE.ATTACKING].includes(newState)) {
-        this.resetBasicActionsInterval()
+      if ([STATE.GATHERING, STATE.ATTACKING, STATE.DEATH].includes(newState)) {
+        this.resetIntervals();
       }
       if ([STATE.MOVING].includes(newState)) {
         this.handleBasicActions();
@@ -88,17 +94,10 @@ class EntityControl {
     }, 0);
   }
 
-  handleCombatActions() {
-    this.resetBasicActionsInterval()
-    const controls = this.controls.filter((c) => c.type === "combat");
-
-    for (const c of controls) {
-    }
-  }
-
-  resetBasicActionsInterval() {
-    clearInterval(this.basicActionsInterval)
+  resetIntervals() {
+    clearInterval(this.basicActionsInterval);
     this.basicActionsInterval = null;
+    this.pathingInterval = null;
   }
 
   handlePathingActions() {
@@ -106,21 +105,27 @@ class EntityControl {
 
     if (this.lastPathIndex >= controls.length - 1) this.lastPathIndex = -1;
 
-    for (let i = this.lastPathIndex+1; i < controls.length; i++) {
+    for (let i = this.lastPathIndex + 1; i < controls.length; i++) {
       const control = controls[i];
-      console.log('iterating pathing...', i)
       if (control) {
-        const [x, y] = control.actionValue?.trim()?.split(" ");
-        if(this.entity.x === parseInt(x) && this.entity.y === parseInt(y)) continue;
-        const a = new ActionControl(control, this.entity);
-        if (a.isConditionMet()) {
-          this.lastPathIndex = i;
-          a.execute();
-          return
+        if (control.actionType === "goToPosition") {
+          const [x, y] = control.actionValue?.trim()?.split(" ");
+          if (this.entity.x === parseInt(x) && this.entity.y === parseInt(y))
+            continue;
+          const a = new ActionControl(control, this.entity);
+          if (a.isConditionMet()) {
+            this.lastPathIndex = i;
+            return a.execute();
+          }
+        }
+        if (control.actionType === "followPlayer") {
+          const a = new ActionControl(control, this.entity);
+          if (a.isConditionMet()) {
+            return a.execute();
+          }
         }
       }
     }
-
   }
 
   handleBasicActions() {
@@ -133,61 +138,8 @@ class EntityControl {
         if (a.isConditionMet()) {
           a.execute();
         }
-        // if (this.isConditionMet(c)) {
-
-        // }
       }
     }, 200);
-  }
-
-  handleCombatAction(action) {
-    switch (action.actionType) {
-      case "useSpell":
-        this.useSpell(action.actionValue);
-        break;
-      default:
-        console.log(`Unknown combat action type: ${action.actionType}`);
-    }
-  }
-
-  handleBasicAction(action) {
-    switch (action.actionType) {
-      case "attackEnemy":
-        this.attackEnemy(action.conditionValue);
-        break;
-      default:
-        console.log(`Unknown basic action type: ${action.actionType}`);
-    }
-  }
-
-  handlePathingAction(action) {
-    switch (action.actionType) {
-      case "goToPosition":
-        const [x, y] = action.actionValue.split(" ").map(Number);
-        this.goToPosition(x, y);
-        break;
-      default:
-        console.log(`Unknown pathing action type: ${action.actionType}`);
-    }
-  }
-
-  goToPosition(x, y) {
-    this.position = { x, y };
-    console.log(
-      `Entity moved to position: (${this.position.x}, ${this.position.y})`
-    );
-  }
-
-  attackEnemy(enemyLevel) {
-    if (enemyLevel < 10) {
-      console.log("Attacking enemy!");
-    } else {
-      console.log("Enemy level too high, not attacking.");
-    }
-  }
-
-  useSpell(spellName) {
-    console.log(`Using ${spellName} spell!`);
   }
 }
 

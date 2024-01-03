@@ -1,14 +1,17 @@
 const { map } = require("../globals");
+const { Interactable } = require("../interactable");
 const { createItem } = require("../item");
 const { getRandomInt, generateUniqueString } = require("../utils");
 
-const MAP_REFRESH_RATE_IN_MS = 220;
+const MAP_REFRESH_RATE_IN_MS = 120;
 
 const STATE = {
   ATTACKING: "ATTACKING",
   IDLE: "IDLE",
   GATHERING: "GATHERING",
   MOVING: "MOVING",
+  DEATH: "DEATH",
+  INTERACTING: "INTERACTING",
 };
 
 class Entity {
@@ -21,13 +24,14 @@ class Entity {
     kind,
     experience,
     type = "player",
-    inventory = [],
+    inventory,
     attackRange = 1,
     attackSpeed = 900,
     map,
     connection,
     autoDefend = false,
   }) {
+    this.user = undefined; // will be filled later
     this.changeStateCb = null;
     this.id = id;
     this.name = name;
@@ -40,6 +44,7 @@ class Entity {
     this.mana = mana;
     this.maxMana = hp;
     this.experience = experience;
+    this.interactableObject = null;
     this.equiped = {
       head: null,
       armor: null,
@@ -52,7 +57,7 @@ class Entity {
     this.speed = speed;
     this.level = 1;
     this.moving = false;
-    this.movingInterval = null;
+    this.movingTimeout = null;
     this.harvestingInterval = null;
     this.attacking = false;
     this.attackingInterval = null;
@@ -66,7 +71,9 @@ class Entity {
     this.x = 0;
     this.y = 0;
 
-    console.log(this.inventory);
+    this.movementSpeed = 700;
+    this.movingIsBlocked = false;
+
     this.startEmitMap();
     this.calculateLevel();
     this.equipItemsInInventory();
@@ -75,19 +82,30 @@ class Entity {
 
   startEmitMap() {
     setInterval(() => {
-      this.connection.updateMap(this.id, this.map.getEntityMap(this));
+      this.connection.updateMap(this.map.getEntityMap(this));
     }, MAP_REFRESH_RATE_IN_MS);
   }
 
-  equipItemsInInventory() {
-    console.log("hehe");
-    for (const o of this.inventory) {
-      console.log("iterating", o);
-      if (o.equiped) {
-        this.equip(o);
-      }
-    }
-    this.connection.updateInventory(this.id, this.inventory);
+  // equipItemsInInventory() {
+  //   console.log("hehe");
+  //   for (const o of this.inventory) {
+  //     if (o.equiped) {
+  //       this.equip(o);
+  //     }
+  //   }
+  //   this.connection.updateInventory(this.id, this.inventory);
+  // }
+
+  followPlayer(name) {
+    const p = this.user.getPlayerByName(name);
+    if (p) this.goToPosition(p.x, p.y);
+  }
+
+  attackFriendlyTarget(name) {
+    const p = this.user.getPlayerByName(name);
+    const target = p?.target;
+    if (!target) return;
+    this.attackEnemy(target);
   }
 
   getAttrs() {
@@ -99,7 +117,7 @@ class Entity {
       critChance: 5,
     };
     // items
-    for (const item of this.inventory) {
+    for (const item of this.inventory.getItems()) {
       if (item.attrs) {
         for (const attr in item.attrs) {
           attrs[attr] =
@@ -112,37 +130,116 @@ class Entity {
     return attrs;
   }
 
+  // equip(item) {
+  //   item.equiped = true;
+  //   const equipedItem = this.equiped[item.type];
+  //   if (equipedItem) equipedItem.equiped = false;
+  //   this.equiped[item.type] = item;
+
+  //   console.log("Item equipped", this.equipped);
+  //   const attrs = this.getAttrs();
+  //   this.maxHp = attrs.hp;
+  //   this.maxMana = attrs.hp;
+  //   this.connection.equipedItemsUpdated(this.id, this.equiped);
+  //   this.connection.attributesUpdated(this.id, attrs);
+  // }
+
   equip(item) {
     item.equiped = true;
-    const equipedItem = this.equiped[item.type];
-    if (equipedItem) equipedItem.equiped = false;
+    const equippedItem = this.equiped[item.type];
+    if (equippedItem) equippedItem.equiped = false;
     this.equiped[item.type] = item;
 
     console.log("Item equipped", this.equipped);
     const attrs = this.getAttrs();
     this.maxHp = attrs.hp;
     this.maxMana = attrs.hp;
-    this.connection.equipedItemsUpdated(this.id, this.equiped);
-    this.connection.attributesUpdated(this.id, attrs);
+    this.connection.equippedItemsUpdated(this.equiped);
+    this.connection.attributesUpdated(attrs);
   }
 
+  equipItemsInInventory() {
+    console.log("hehe");
+    for (const item of this.inventory.getItems()) {
+      if (item.equiped) {
+        this.equip(item);
+      }
+    }
+    this.connection.updateInventory(this.inventory.getItems());
+  }
+
+  addItem(item) {
+    console.log("item", item);
+    this.inventory.addItem(item);
+    this.connection.addItem(item);
+    this.connection.updateInventory(this.inventory.getItems());
+  }
+
+  hasItems(items) {
+    return this.inventory.hasItems(items);
+  }
+
+  removeItem(item) {
+    this.inventory.removeItem(item);
+    this.connection.updateInventory(this.inventory.getItems());
+  }
+
+  // getDirectionsToTarget(targetX, targetY) {
+  //   let directionX = targetX > this.x ? 1 : targetX < this.x ? -1 : 0;
+  //   let directionY = targetY > this.y ? 1 : targetY < this.y ? -1 : 0;
+
+  //   const nextPosition = [this.x + directionX, this.y + directionY];
+
+  //   if (!this.map.canMove(nextPosition[0], nextPosition[1])) {
+  //     console.log("here boy ------");
+  //     if (this.calculateDistance(this.x, this.y, targetX, targetY) <= 1) {
+  //       console.log("1");
+  //       return [0, 0];
+  //     }
+  //     console.log('finished')
+  //   }
+
+  //   return [directionX, directionY];
+  // }
+
   getDirectionsToTarget(targetX, targetY) {
-    let directionX = targetX > this.x ? 1 : targetX < this.x ? -1 : 0;
-    let directionY = targetY > this.y ? 1 : targetY < this.y ? -1 : 0;
+    const directionX = targetX > this.x ? 1 : targetX < this.x ? -1 : 0;
+    const directionY = targetY > this.y ? 1 : targetY < this.y ? -1 : 0;
 
     const nextPosition = [this.x + directionX, this.y + directionY];
 
+    // Check if the next position is blocked
     if (!this.map.canMove(nextPosition[0], nextPosition[1])) {
-      if (this.calculateDistance(this.x, this.y, targetX, targetY) <= 1)
+      // Check if the target is within 1 unit distance
+      if (this.calculateDistance(this.x, this.y, targetX, targetY) <= 1) {
+        console.log("Already close to the target");
         return [0, 0];
+      }
+
       if (this.map.canMove(this.x + directionX, this.y + directionX)) {
-        directionY = directionX;
-        directionX = directionX;
+        return [directionX, directionX];
       }
+
       if (this.map.canMove(this.x + directionY, this.y + directionY)) {
-        directionY = directionY;
-        directionX = directionY;
+        return [directionY, directionY];
       }
+
+      // Try moving along the X-axis
+      if (this.map.canMove(this.x + directionX, this.y)) {
+        return [directionX, 0];
+      }
+
+      // Try moving along the Y-axis
+      if (this.map.canMove(this.x, this.y + directionY)) {
+        return [0, directionY];
+      }
+
+      // If both X and Y are blocked, try diagonal movement
+      if (this.map.canMove(this.x + directionX, this.y + directionY)) {
+        return [directionX, directionY];
+      }
+
+      console.log("Cannot move in any direction");
     }
 
     return [directionX, directionY];
@@ -157,8 +254,6 @@ class Entity {
   }
 
   async gather(x, y) {
-    console.log("START GATHERING BOYS", x, y);
-    console.trace();
     const handleAttack = () => {
       clearInterval(this.harvestingInterval);
       this.harvestingInterval = setInterval(() => {
@@ -166,7 +261,7 @@ class Entity {
         if (!material || material.harvested || this.isDead()) {
           return stop();
         }
-        if (this.isMaterialInRange(material)) {
+        if (this.isInRange(material)) {
           try {
             const drop = material.harvest(this.equiped.secondary);
             if (drop) {
@@ -174,7 +269,7 @@ class Entity {
               return stop();
             }
           } catch (e) {
-            this.connection.emitError(this.id, e.message);
+            this.connection.emitError(e.message);
             return stop();
           }
         } else {
@@ -195,9 +290,34 @@ class Entity {
     handleAttack();
   }
 
+  async interact(x, y) {
+    const obj = this.map.getObject(x, y)?.interactable;
+    if (!obj || this.isDead()) {
+      return stop();
+    }
+    if (this.isInRange(obj)) {
+      this.interactableObject = obj;
+      obj.interact(this);
+    } else {
+      const { x, y } = obj;
+      this.goToPosition(x, y);
+    }
+
+    const stop = () => {
+      this.target = null;
+      this.stopAll();
+    };
+
+    this.changeState(STATE.INTERACTING);
+  }
+
   changeState(state) {
+    if (this.state === STATE.INTERACTING) {
+      this.interactableObject?.stopInteracting?.(this);
+      this.interactableObject = null;
+    }
     this.state = state;
-    this.connection.changeState(this.id, state);
+    this.connection.changeState(state);
     this.changeStateCb?.(state);
   }
 
@@ -240,7 +360,7 @@ class Entity {
 
     this.target = enemy;
     this.changeState(STATE.ATTACKING);
-    this.connection.attackEnemy(this.id, enemy);
+    this.connection.attackEnemy(enemy);
     console.log("target: ", enemy.name);
     enemy.attackInitiated(this);
 
@@ -258,7 +378,13 @@ class Entity {
     );
   }
 
-  isMaterialInRange(enemy) {
+  isInRange(enemy) {
+    if (enemy instanceof Interactable) {
+      return (
+        Math.floor(this.calculateDistance(this.x, this.y, enemy.x, enemy.y)) <=
+        2
+      );
+    }
     return (
       Math.floor(this.calculateDistance(this.x, this.y, enemy.x, enemy.y)) <= 1
     );
@@ -290,10 +416,10 @@ class Entity {
     damage = Math.max(3, damage);
 
     const drops = enemy.takeDamage(damage, this);
-    this.connection.enemyHit(this.id, damage, this, enemy);
+    this.connection.enemyHit(damage, this, enemy);
     if (enemy.isDead()) {
       this.gainExperience(100); // TODO exp
-      this.connection.enemyDied(this.id, enemy);
+      this.connection.enemyDied(enemy);
     }
     if (drops) {
       for (const d of drops) {
@@ -308,14 +434,46 @@ class Entity {
     );
   }
 
+  clickOnCell(cell) {
+    this.stopAll();
+
+    const occupiedBy = cell?.occupiedBy;
+    const material = cell?.material;
+    const interactable = cell?.interactable;
+    const x = cell?.x;
+    const y = cell?.y;
+
+    if (occupiedBy && occupiedBy.id !== this.id) {
+      const e = this.findNearbyEntityById(occupiedBy.id);
+      const myPlayer = this.user
+        .getPlayers()
+        .find((p) => p.id === occupiedBy.id);
+
+      if (myPlayer) {
+        this.goToPosition(x, y);
+      } else if (e) {
+        this.attackEnemy(e);
+      }
+    }
+    if (material) {
+      this.gather(x, y);
+    }
+    if (interactable) {
+      this.interact(x, y);
+    }
+    if (!occupiedBy && !material) {
+      this.goToPosition(x, y);
+    }
+  }
+
   // Methods to interact with the entity
   takeDamage(damage, from) {
     this.hp -= damage;
     if (this.hp <= 0) {
       this.hp = 0;
     }
-    this.connection.takeDamage(this.id, damage, from, this);
-    this.connection.basicAttrsUpdated(this.id, {
+    this.connection.takeDamage(damage, from, this);
+    this.connection.basicAttrsUpdated({
       hp: this.hp,
       mana: this.mana,
     });
@@ -325,10 +483,11 @@ class Entity {
     }
 
     console.log("taking damage", this.autoDefend, this.attacking);
-    if (this.autoDefend && !this.attacking) this.attackEnemy(from);
+    if (this.autoDefend && !this.attacking && !this.isDead())
+      this.attackEnemy(from);
   }
 
-  getClosestTarget(type, range) {
+  getClosestTarget(type, range = 6) {
     const playerMap = this.map.getEntityMap(this, range);
     let closestTarget = null;
     let closestDistance = Infinity;
@@ -348,6 +507,28 @@ class Entity {
       }
     }
     return closestTarget;
+  }
+
+  findNearbyEntityById(id) {
+    for (const e of this.getNearbyEntities()) {
+      if (e.id === id) return e;
+    }
+  }
+
+  getNearbyEntities(range = 7) {
+    const playerMap = this.map.getEntityMap(this, range);
+    const entities = [];
+
+    // Iterate through the player's map
+    for (let y = 0; y < playerMap.length; y++) {
+      for (let x = 0; x < playerMap[y].length; x++) {
+        const cell = playerMap[y][x];
+        if (cell.occupiedBy) {
+          entities.push(cell.occupiedBy);
+        }
+      }
+    }
+    return entities;
   }
 
   getNearbyMaterials(range = 7) {
@@ -388,51 +569,51 @@ class Entity {
     const oldLevel = this.level;
     this.calculateLevel();
     const newLevel = this.level;
-    this.connection.gainExperience(this.id, experience);
-    if (oldLevel < newLevel) this.connection.levelUp(this.id, newLevel);
+    this.connection.gainExperience(experience);
+    if (oldLevel < newLevel) this.connection.levelUp(newLevel);
   }
 
   calculateLevel() {
     this.level = Math.floor(Math.sqrt(this.experience) / 2) + 1;
   }
 
-  addItem({ name, amount = 1 }) {
-    const item = createItem(name, amount);
-    item.equiped = false;
+  // addItem({ name, amount = 1 }) {
+  //   const item = createItem(name, amount);
+  //   item.equiped = false;
 
-    const existingItemIndex = this.inventory.findIndex(
-      (i) => i.name === item.name && i.amount < item.maxStack
-    );
+  //   const existingItemIndex = this.inventory.findIndex(
+  //     (i) => i.name === item.name && i.amount < item.maxStack
+  //   );
 
-    if (existingItemIndex !== -1) {
-      this.inventory[existingItemIndex].amount += amount;
+  //   if (existingItemIndex !== -1) {
+  //     this.inventory[existingItemIndex].amount += amount;
 
-      // Check if the stack exceeds the maximum
-      if (this.inventory[existingItemIndex].amount > item.maxStack) {
-        const overflowAmount =
-          this.inventory[existingItemIndex].amount - item.maxStack;
-        this.inventory[existingItemIndex].amount = item.maxStack;
+  //     // Check if the stack exceeds the maximum
+  //     if (this.inventory[existingItemIndex].amount > item.maxStack) {
+  //       const overflowAmount =
+  //         this.inventory[existingItemIndex].amount - item.maxStack;
+  //       this.inventory[existingItemIndex].amount = item.maxStack;
 
-        // Create a new item for the overflow
-        const overflowItem = { ...item, amount: overflowAmount };
-        this.inventory.push(overflowItem);
-      }
-    } else {
-      this.inventory.push(item);
-    }
+  //       // Create a new item for the overflow
+  //       const overflowItem = { ...item, amount: overflowAmount };
+  //       this.inventory.push(overflowItem);
+  //     }
+  //   } else {
+  //     this.inventory.push(item);
+  //   }
 
-    console.log("Adding an item to inventory", item);
+  //   console.log("Adding an item to inventory", item);
 
-    this.connection.addItem(this.id, item);
-    this.connection.updateInventory(this.id, this.inventory);
-  }
+  //   this.connection.addItem(this.id, item);
+  //   this.connection.updateInventory(this.id, this.inventory);
+  // }
 
-  removeItem(item) {
-    const index = this.inventory.indexOf(item);
-    if (index !== -1) {
-      this.inventory.splice(index, 1);
-    }
-  }
+  // removeItem(item) {
+  //   const index = this.inventory.indexOf(item);
+  //   if (index !== -1) {
+  //     this.inventory.splice(index, 1);
+  //   }
+  // }
 
   move(doneCb, movedCb) {
     const finish = () => {
@@ -441,31 +622,8 @@ class Entity {
       doneCb?.();
     };
 
-    if (this.hp == 0) return;
-    // console.log(
-    //   "Start to move!",
-    //   this.name,
-    //   [this.x, this.y],
-    //   this.targetLocation
-    // );
-    // Adjust the entity's position based on the vector and speed
-    if (this.movingInterval) clearInterval(this.movingInterval);
-    if (!this.targetLocation) return finish();
-    if (
-      this.calculateDistance(
-        this.x,
-        this.y,
-        this.targetLocation[0],
-        this.targetLocation[1]
-      ) < 1
-    )
-      return finish();
-
-    this.moving = true;
-
-    if (this.state === STATE.IDLE) this.changeState(STATE.MOVING);
-
-    this.movingInterval = setInterval(() => {
+    const doMove = () => {
+      if (this.movingIsBlocked) return;
       if (!this.moving || !this.targetLocation) return this.stopMovement();
       const [dx, dy] = this.getDirectionsToTarget(
         this.targetLocation[0],
@@ -474,10 +632,9 @@ class Entity {
       const x = this.x + dx;
       const y = this.y + dy;
 
-      console.log("target", this.name, this.x, this.y, this.targetLocation);
       if (this.x == this.targetLocation[0] && this.y === this.targetLocation[1])
         return this.stopMovement();
-      // console.log(this.name, x, y, dx, dy)
+
       if (this.map.canMove(x, y)) {
         if (this.map.moveEntity(this.x, this.y, x, y)) {
           this.x = x;
@@ -493,17 +650,33 @@ class Entity {
         }
       } else {
         finish();
-        // if (
-        //   this.calculateDistance(
-        //     this.x,
-        //     this.y,
-        //     this.targetLocation[0],
-        //     this.targetLocation[1]
-        //   ) === 1
-        // ) {
-        // }
       }
-    }, 700);
+    };
+
+    if (this.hp == 0) return;
+    if (this.movingTimeout) clearTimeout(this.movingTimeout);
+    if (!this.targetLocation) return finish();
+    if (
+      this.calculateDistance(
+        this.x,
+        this.y,
+        this.targetLocation[0],
+        this.targetLocation[1]
+      ) < 1
+    )
+      return finish();
+
+    this.moving = true;
+
+    if (this.state === STATE.IDLE) this.changeState(STATE.MOVING);
+
+    this.movingTimeout = setTimeout(() => {
+      this.movingIsBlocked = false;
+      this.move(doneCb, movedCb);
+    }, this.movementSpeed);
+
+    doMove();
+    this.movingIsBlocked = true;
   }
 
   isDead() {
@@ -515,7 +688,7 @@ class Entity {
   }
 
   emitInventory() {
-    this.connection.updateInventory(this.id, this.inventory);
+    this.connection.updateInventory(this.inventory.getItems());
   }
 
   placeEntity(x, y) {
@@ -535,7 +708,8 @@ class Entity {
         drops.push({ ...i });
       }
     }
-    this.connection.die(this.id);
+    this.connection.die();
+    this.changeState(STATE.DEATH);
     return drops;
   }
 
@@ -547,13 +721,22 @@ class Entity {
     clearInterval(this.harvestingInterval);
     this.attacking = false;
     this.stopMovement();
-    this.changeState(STATE.IDLE);
+    if (this.state !== STATE.DEATH) this.changeState(STATE.IDLE);
   }
 
   stopMovement() {
-    clearInterval(this.movingInterval);
+    clearTimeout(this.movingTimeout);
+    this.movingTimeout = setTimeout(
+      () => (this.movingIsBlocked = false),
+      this.movementSpeed
+    );
     this.moving = false;
     if (this.state === STATE.MOVING) this.changeState(STATE.IDLE);
+  }
+
+  disconnect() {
+    this.stopAll();
+    map.removeEntity(this.x, this.y);
   }
 }
 

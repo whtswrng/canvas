@@ -53,7 +53,7 @@ export const UserActions = () => {
         className={"action " + (autoAttack ? "on" : "off")}
         onClick={handleAutoAttack}
       >
-        Auto attack
+        PvP
       </button>
     </div>
   );

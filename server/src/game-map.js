@@ -15,7 +15,7 @@ class GameMap {
 
   placeObject(x, y, obj) {
     if (this.isValidPosition(x, y)) {
-      this.map[y][x] = obj
+      this.map[y][x] = obj;
       return true;
     }
     return false;
@@ -23,7 +23,23 @@ class GameMap {
 
   placeMaterial(x, y, mat) {
     if (this.isValidPosition(x, y)) {
-      this.map[y][x].material = mat
+      this.map[y][x].material = mat;
+      return true;
+    }
+    return false;
+  }
+
+  placeInteractable(x, y, obj) {
+    if (this.isValidPosition(x, y)) {
+      this.map[y][x].interactable = obj;
+      return true;
+    }
+    return false;
+  }
+
+  makeStatic(x, y) {
+    if (this.isValidPosition(x, y)) {
+      this.map[y][x].static = true;
       return true;
     }
     return false;
@@ -81,22 +97,28 @@ class GameMap {
 
   print(rawMap) {
     for (const row of rawMap) {
-      let rowString = '';
+      let rowString = "";
       for (const cell of row) {
         rowString += `[${getCell(cell)}] `;
       }
-      console.log(rowString)
+      console.log(rowString);
     }
 
     function getCell(cell) {
-      if (cell.occupiedBy) return '😊'
-      if (cell.material) return '🌷'
-      return cell.type[0] + ' '
+      if (cell.occupiedBy) return "😊";
+      if (cell.material) return "🌷";
+      return cell.type[0] + " ";
     }
   }
 
   canMove(x, y) {
-    return this.isValidPosition(x, y) && !this.map[y][x].occupiedBy && !this.map[y][x].static;
+    return (
+      this.isValidPosition(x, y) &&
+      !this.map[y][x].occupiedBy &&
+      !this.map[y][x].static &&
+      !this.map[y][x].material &&
+      !this.map[y][x].interactable
+    );
   }
 
   removeEntity(x, y) {
@@ -129,29 +151,36 @@ class GameMap {
 }
 
 function createRandomObject(x, y) {
-  if(getRandomInt(0, 100) <= 70) {
-    return createObject(x, y, 'grass', 'green');
+  if (getRandomInt(0, 100) <= 70) {
+    return createObject(x, y, "grass", "green");
   } else {
     // return createObject(x, y, 'grass', 'green');
     return createObject(x, y);
   }
 }
 
-function createObject(x, y, type = 'dirt', bg = '#4B5320', _static = false, material = null) {
+function createObject(
+  x,
+  y,
+  type = "dirt",
+  bg = "#4B5320",
+  _static = false,
+  material = null
+) {
   return {
     x,
     y,
     type,
     bg,
     occupiedBy: null,
+    interactable: null,
     static: _static,
     material,
     items: [],
-  }
+  };
 }
-
 
 module.exports = {
   GameMap,
-  createObject
+  createObject,
 };

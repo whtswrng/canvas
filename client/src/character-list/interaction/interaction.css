@@ -1,0 +1,56 @@
+.interaction-options {
+    margin-bottom: 10px;
+}
+
+.interaction-option {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(54px, 1fr));
+  gap: 6px;
+  border-bottom: 1px solid #bcbcbc;
+  padding: 5px;
+}
+
+.interaction-option-separator {
+  margin-top: 25px;
+  margin-left: 5px;
+  font-weight: 200;
+}
+
+.interaction-option-requirements {
+  display: flex;
+  width: 380px;
+  flex-wrap: wrap;
+}
+
+.interaction-option:hover {
+  background-color: #dedede;
+  cursor: pointer;
+}
+
+.interaction-option.selected {
+  background-color: #f4e254;
+  cursor: pointer;
+}
+
+.interaction-description {
+  margin-bottom: 20px;
+}
+
+.interaction-option-item {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  overflow: hidden;
+  width: 55px;
+  height: 55px;
+  margin-top: 5px;
+  margin-right: 3px;
+}
+
+.inventory-item img {
+  max-width: 100%;
+  height: auto;
+}
+
+.item-details {
+  margin-top: 8px;
+}

@@ -18,7 +18,7 @@ export const Item = ({ item }) => {
           backgroundPosition: "center",
         }}
       >
-        {item.name} ({item.amount}/{item.maxStack})
+        {item.name} ({item.amount}x)
       </div>
       <Tooltip anchorSelect={"#item-" + item.id} place="top">
         <div style={{maxWidth: 100, wordBreak: 'break-word'}}>

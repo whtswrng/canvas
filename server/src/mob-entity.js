@@ -1,5 +1,6 @@
 const { Connection } = require("./connection");
 const { Entity, STATE } = require("./entity/entity");
+const { Inventory } = require("./entity/inventory");
 const { getRandomInt, generateUniqueString } = require("./utils");
 
 const mockedSocket = {
@@ -10,7 +11,7 @@ class MockedConnection extends Connection {
   updateMap() {}
 }
 
-const mockConnection = new MockedConnection(mockedSocket);
+const mockConnection = new MockedConnection('', mockedSocket);
 
 class MobEntity extends Entity {
   constructor({
@@ -33,6 +34,7 @@ class MobEntity extends Entity {
       kind,
       speed,
       experience,
+      inventory: new Inventory(),
       map,
       type: "mob",
       connection: mockConnection,
@@ -113,10 +115,15 @@ class MobEntity extends Entity {
   }
 
   spawn() {
+    console.log('==========+RESPAWN=========');
     this.hp = this.originalHp;
     this.mana = this.originalMana;
     this.x = this.originalX;
     this.y = this.originalY;
+
+    const o = this.map.getObject(this.x, this.y);
+    if(o.occupiedBy || o.material) return setTimeout(() => this.spawn(), 4000);
+
     this.map.placeEntity(this.x, this.y, this);
     this.changeState(STATE.IDLE);
   }

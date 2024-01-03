@@ -3,13 +3,12 @@ import { socket } from "../../App";
 
 const ControlsContext = createContext();
 
-export const ControlsProvider = ({ children }) => {
+export const ControlsProvider = ({ playerId, children }) => {
   const [list, setList] = useState([]);
 
   useEffect(() => {
-    // Emit the payload to the server
     console.log("updating controls", list);
-    socket.emit("UPDATE_CONTROLS", { playerId: null, list });
+    socket.emit("UPDATE_CONTROLS", { playerId, list });
   }, [list]);
 
   const save = (payload) => {
@@ -23,7 +22,7 @@ export const ControlsProvider = ({ children }) => {
       if (i !== -1) {
         newList[i] = { ...payload };
       } else {
-        newList.push(payload)
+        newList.push(payload);
       }
       return newList;
     });
