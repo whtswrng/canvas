@@ -74,7 +74,6 @@ class ActionControl {
   }
 
   useItem() {
-    console.log('uSING ITEM!!!', this.control)
     this.entity.useItemByName(this.control.actionValue);
   }
 
@@ -84,7 +83,6 @@ class ActionControl {
 
   execGoTo() {
     const [x, y] = this.control.actionValue.trim().split(" ");
-    console.log("go to", x, y);
     this.entity.goToPosition(parseInt(x), parseInt(y));
   }
 

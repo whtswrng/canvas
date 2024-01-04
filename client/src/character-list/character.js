@@ -24,8 +24,7 @@ export const Character = ({ character: defaultChar }) => {
   const { data: map } = useListen("MAP_UPDATED", playerId);
   const { data: enemyHit } = useListen("ENEMY_HIT", playerId);
 
-  useEffect(() => {
-  }, [_stateData]);
+  useEffect(() => {}, [_stateData]);
 
   useEffect(() => {
     if (interactionData) {
@@ -63,7 +62,9 @@ export const Character = ({ character: defaultChar }) => {
       <div>
         <div className="character-header">
           <div>
-            <h2>{name}</h2>
+            <h2>
+              {name} {attrs.level} {attrs.levelPercentage}{" "}
+            </h2>
             <span style={{ color: getStateColor() }}>{playerState}</span>
           </div>
           <div className="enemy-container">
@@ -83,7 +84,6 @@ export const Character = ({ character: defaultChar }) => {
                 style={{ width: `${calculatePercentage(hp, maxHp)}%` }}
               />
             </div>
-
             <p>
               Mana {mana}/{maxMana}
             </p>
@@ -93,14 +93,19 @@ export const Character = ({ character: defaultChar }) => {
                 style={{ width: `${calculatePercentage(mana, maxMana)}%` }}
               />
             </div>
+            <div className="progress-bar" style={{ marginTop: 5, height: 10 }}>
+              <div
+                className="progress-bar-exp-fill"
+                style={{ width: `${attrs.levelPercentage}%` }}
+              />
+            </div>
           </div>
           <div className="attrs">
             <Attributes attrs={attrs} />
           </div>
         </div>
 
-
-        <Effects playerId={playerId}/>
+        <Effects playerId={playerId} />
         <UserActions />
 
         <div className="actions">

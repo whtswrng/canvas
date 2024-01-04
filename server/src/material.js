@@ -32,11 +32,14 @@ class Material {
   }
 
   harvest(weapon) {
-    console.log('=======================')
-    console.log(weapon)
+    if (this.level > weapon.level)
+      throw new Error(
+        `You need higher level of the secondary weapon to gather this object.`
+      );
+
     if (this.secondaryClass && weapon?.secondaryClass !== this.secondaryClass)
       throw new Error(
-        `Cannot harvest object without ${this.secondaryClass} weapon.`
+        `Cannot gather object without ${this.secondaryClass} weapon.`
       );
     if (this.hp <= 0) {
       this.map.removeMaterial(this.x, this.y);

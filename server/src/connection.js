@@ -44,7 +44,7 @@ class Connection {
                 name: cell.occupiedBy.name,
                 level: cell.occupiedBy.level,
                 hp: cell.occupiedBy.hp,
-                maxHp: cell.occupiedBy.maxHp,
+                maxHp: cell.occupiedBy.getAttrs().hp,
                 mana: cell.occupiedBy.mana,
                 maxMana: cell.occupiedBy.maxMana,
                 state: cell.occupiedBy.state,
@@ -86,7 +86,10 @@ class Connection {
   }
 
   equipedItemsUpdated(equipedItems) {
-    this.emit("EQUIPED_ITEMS_UPDATED", { playerId: this.id, equipedItems });
+    this.emit("EQUIPED_ITEMS_UPDATED", {
+      playerId: this.id,
+      items: equipedItems,
+    });
   }
 
   basicAttrsUpdated(attrs) {
@@ -109,6 +112,13 @@ class Connection {
     this.emit("ATTACK_ENEMY", {
       playerId: this.id,
       enemy: { id: enemy.id, name: enemy.name },
+    });
+  }
+
+  healPlayer(player) {
+    this.emit("HEAL_PLAYER", {
+      playerId: this.id,
+      player: { id: player.id, name: player.name },
     });
   }
 

@@ -20,7 +20,6 @@ const items = {
   "Common defense potion": {
     name: "Common defense potion",
     rarity: "common",
-    stackable: true,
     maxStack: 10,
     description: "Just a basic potion",
     type: "material",
@@ -35,7 +34,6 @@ const items = {
   "Oak Log": {
     name: "Oak Log",
     rarity: "common",
-    stackable: true,
     maxStack: 10,
     description: "Just a basic wood",
     type: "material",
@@ -43,19 +41,20 @@ const items = {
   "Hands of Aros": {
     name: "Hands of Aros",
     rarity: "common",
-    stackable: true,
-    maxStack: 20,
+    maxStack: 1,
+    equipable: true,
     description: "Just a basic wood",
-    type: "material",
+    type: "hands",
     attrs: { hp: 10, mana: 10, power: 2, defense: 10 },
   },
   "Simple axe": {
     name: "Simple axe",
     type: "secondary",
+    level: 1,
     rarity: "common",
     secondaryClass: "lumberjack",
-    stackable: true,
-    maxStack: 20,
+    equipable: true,
+    maxStack: 1,
     description: "Just a basic wood",
   },
 };

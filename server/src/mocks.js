@@ -27,6 +27,7 @@ const tree = new Material({
   type: "tree",
   name: "Tall tree",
   hp: 30,
+  level: 2,
   x: 10,
   y: 7,
   respawnInS: 5,
@@ -48,6 +49,7 @@ const enemy = new MobEntity({
   experience: 1,
   respawnInS: 2,
   drops: [{ name: "Varnish", min: 1, max: 3, chance: 99 }],
+  dropExperience: 50
 });
 
 const controls = [
@@ -59,14 +61,14 @@ const controls = [
     type: "controls",
     actionValue: true,
   },
-  // {
-  //   type: "basic",
-  //   actionType: "attackEnemy",
-  //   actionValue: "",
-  //   condition: "ifTargetLvl",
-  //   conditionValue: "isLowerThan",
-  //   conditionComparisonValue: "99",
-  // },
+  {
+    type: "basic",
+    actionType: "attackEnemy",
+    actionValue: "",
+    condition: "ifTargetLvl",
+    conditionValue: "isLowerThan",
+    conditionComparisonValue: "99",
+  },
   {
     type: "pathing",
     actionType: "goToPosition",
@@ -88,7 +90,7 @@ const ec = new EntityControl(enemy, controls);
 enemy.placeEntity(11, 10); // Place an enemy nearby
 ec.init();
 
-function createPlayer(name, socket, x, y) {
+function createPlayer(name, kind, socket, x, y) {
   const entityId = getRandomInt(0, 1000000);
   const connection = new Connection(entityId, socket, map);
   const inventory = new Inventory(connection);
@@ -103,9 +105,7 @@ function createPlayer(name, socket, x, y) {
   const p = new Entity({
     id: entityId,
     name: name,
-    hp: 100,
-    kind: "light-mage",
-    mana: 50,
+    kind: kind ?? "mage",
     speed: 0,
     experience: 1,
     attackRange: 4,
@@ -114,6 +114,8 @@ function createPlayer(name, socket, x, y) {
     map,
     inventory,
   });
+
+  p.equipByName("Simple axe")
 
   const entityControl = new EntityControl(p, []);
   p.placeEntity(x, y); // Place the player at the center of the map

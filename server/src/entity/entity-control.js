@@ -83,14 +83,16 @@ class EntityControl {
 
       console.log("newState", this.entity.name, newState);
       if ([STATE.IDLE].includes(newState)) {
+        this.resetCombatInterval();
         this.handlePathingActions();
         this.handleBasicActions();
       }
       if ([STATE.ATTACKING].includes(newState)) {
+        this.resetBasicActionsInterval();
         this.handleCombatActions();
       }
       if ([STATE.GATHERING, STATE.ATTACKING, STATE.DEATH].includes(newState)) {
-        this.resetIntervals();
+        this.resetBasicActionsInterval()
       }
       if ([STATE.MOVING].includes(newState)) {
         this.handleBasicActions();
@@ -98,11 +100,19 @@ class EntityControl {
     }, 0);
   }
 
-  resetIntervals() {
+  resetBasicActionsInterval() {
     clearInterval(this.basicActionsInterval);
-    clearInterval(this.combatActionsInterval);
     this.basicActionsInterval = null;
+  }
+
+  resetCombatInterval() {
+    clearInterval(this.combatActionsInterval);
     this.combatActionsInterval = null;
+  }
+
+  resetIntervals() {
+    this.resetBasicActionsInterval();
+    this.resetCombatInterval();
   }
 
   handlePathingActions() {
@@ -160,7 +170,6 @@ class EntityControl {
       }
     }, 200);
   }
-
 }
 
 module.exports = {

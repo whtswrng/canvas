@@ -1,10 +1,18 @@
 const { map } = require("../globals");
 const { Interactable } = require("../interactable");
 const { createItem } = require("../item");
-const { getRandomInt, generateUniqueString } = require("../utils");
+const {
+  getRandomInt,
+  generateUniqueString,
+  calculatePercentage,
+} = require("../utils");
 
 const MAP_REFRESH_RATE_IN_MS = 120;
 const REGEN_INTERVAL = 2000;
+const HEALING_SPELL_COOLDOWN = 500;
+const HEALING_SPELL_MANA_COST = 20;
+const MAGE_SPELL_MANA_COST = 5;
+const TANK_SPELL_MANA_COST = 5;
 
 const STATE = {
   ATTACKING: "ATTACKING",
@@ -27,7 +35,7 @@ class Entity {
     type = "player",
     inventory,
     attackRange = 1,
-    attackSpeed = 900,
+    attackSpeed = 1200,
     map,
     connection,
     autoDefend = false,
@@ -45,19 +53,19 @@ class Entity {
     this.mana = mana;
     this.maxMana = hp;
     this.experience = experience;
+    this.experience = 33;
     this.interactableObject = null;
     this.equiped = {
+      weapon: null,
+      secondary: null,
       head: null,
       armor: null,
-      weapon: null,
       hands: null,
       boots: null,
-      secondary: null,
     };
     this.effects = [];
     this.inventory = inventory;
     this.speed = speed;
-    this.level = 1;
     this.moving = false;
     this.movingTimeout = null;
     this.harvestingInterval = null;
@@ -76,23 +84,48 @@ class Entity {
     this.movementSpeed = 700;
     this.movingIsBlocked = false;
 
+    this.healingTimeout = null;
     this.startEmitMap();
-    this.calculateLevel();
-    this.connection.entityInit(this);
     this.equipItemsInInventory();
+  }
 
-    // init
-    // additional effects
-    // use item
-    // die -> reset interval
-    // attrs calculate update
-
+  init() {
+    const attrs = this.getAttrs();
+    this.hp = attrs.hp;
+    this.mana = attrs.mana;
     this.initRegenInterval();
+    if (this.kind === "healer") {
+      this.initHealing();
+    }
+    this.connection.entityInit(this);
+  }
+
+  initHealing() {
+    console.log("init healing...");
+    const heal = () => {
+      console.log("trying to heal...");
+      if (!this.isDead()) {
+        const players = this.user.getPlayers();
+        for (const p of players) {
+          const attrs = p.getAttrs();
+          console.log(p.name, p.hp);
+          if (calculatePercentage(p.hp, attrs.hp) <= 80) {
+            console.log("HEAL!");
+            this.heal(p);
+            break;
+          }
+        }
+      }
+      this.healingTimeout = setTimeout(
+        () => heal(),
+        this.attackSpeed + HEALING_SPELL_COOLDOWN
+      );
+    };
+    heal();
   }
 
   applyItemEffect(item) {
     const i = this.effects.findIndex((e) => e.name === item.name);
-    console.log(i);
     if (i !== -1) return false; // not going to apply same effect
 
     this.effects.push({
@@ -132,7 +165,7 @@ class Entity {
 
   useItemByName(itemName) {
     const item = this.inventory.getItemByName(itemName);
-    this.useItem(item);
+    this.useItem(item.id);
   }
 
   initRegenInterval() {
@@ -159,7 +192,7 @@ class Entity {
     }
 
     // Update the client or perform any other necessary actions
-    this.connection.basicAttrsUpdated({ hp: this.hp, mana: this.mana });
+    this.emitBasicAttrsUpdated();
   }
 
   startEmitMap() {
@@ -199,10 +232,12 @@ class Entity {
       defense: 6,
       power: 30,
       critChance: 5,
+      level: this.getLevel(),
+      levelPercentage: this.getLevelPercentage(),
     };
     // items
     for (const item of this.inventory.getItems()) {
-      if (item.attrs) {
+      if (item.attrs && item.equiped) {
         for (const attr in item.attrs) {
           attrs[attr] =
             attrs[attr] === undefined
@@ -214,7 +249,6 @@ class Entity {
     for (const effect of this.effects) {
       if (effect.attrs) {
         for (const key in effect.attrs) {
-          console.log(effect.attrs);
           attrs[key] += effect.attrs[key];
         }
       }
@@ -223,31 +257,26 @@ class Entity {
     return attrs;
   }
 
-  // equip(item) {
-  //   item.equiped = true;
-  //   const equipedItem = this.equiped[item.type];
-  //   if (equipedItem) equipedItem.equiped = false;
-  //   this.equiped[item.type] = item;
-
-  //   console.log("Item equipped", this.equipped);
-  //   const attrs = this.getAttrs();
-  //   this.maxHp = attrs.hp;
-  //   this.maxMana = attrs.hp;
-  //   this.connection.equipedItemsUpdated(this.id, this.equiped);
-  //   this.connection.attributesUpdated(this.id, attrs);
-  // }
-
   equip(item) {
-    item.equiped = true;
-    const equippedItem = this.equiped[item.type];
-    if (equippedItem) equippedItem.equiped = false;
-    this.equiped[item.type] = item;
+    if (!item?.equipable) return;
+    if (this.state !== STATE.IDLE) return;
 
-    console.log("Item equipped", this.equipped);
+    const previouslyEquiped = item.equiped;
+
+    const equipedItem = this.equiped[item.type];
+    if (equipedItem) {
+      equipedItem.equiped = false;
+      this.equiped[item.type] = null;
+    }
+
+    item.equiped = previouslyEquiped !== undefined ? !previouslyEquiped : true;
+
+    if (item.equiped) this.equiped[item.type] = item;
+
     const attrs = this.getAttrs();
-    // this.maxHp = attrs.hp;
-    // this.maxMana = attrs.hp;
-    this.connection.equippedItemsUpdated(this.equiped);
+
+    this.connection.equipedItemsUpdated(this.equiped);
+    this.connection.updateInventory(this.inventory.getItems());
     this.connection.attributesUpdated(attrs);
   }
 
@@ -264,6 +293,16 @@ class Entity {
     this.inventory.addItem(item);
   }
 
+  equipByName(itemName) {
+    const i = this.inventory.getItemByName(itemName);
+    if (i) this.equip(i);
+  }
+
+  equipById(itemId) {
+    const i = this.inventory.getItemById(itemId);
+    if (i) this.equip(i);
+  }
+
   hasItems(items) {
     return this.inventory.hasItems(items);
   }
@@ -272,24 +311,6 @@ class Entity {
     console.log("removing items", items);
     this.inventory.removeItems(items);
   }
-
-  // getDirectionsToTarget(targetX, targetY) {
-  //   let directionX = targetX > this.x ? 1 : targetX < this.x ? -1 : 0;
-  //   let directionY = targetY > this.y ? 1 : targetY < this.y ? -1 : 0;
-
-  //   const nextPosition = [this.x + directionX, this.y + directionY];
-
-  //   if (!this.map.canMove(nextPosition[0], nextPosition[1])) {
-  //     console.log("here boy ------");
-  //     if (this.calculateDistance(this.x, this.y, targetX, targetY) <= 1) {
-  //       console.log("1");
-  //       return [0, 0];
-  //     }
-  //     console.log('finished')
-  //   }
-
-  //   return [directionX, directionY];
-  // }
 
   getDirectionsToTarget(targetX, targetY) {
     const directionX = targetX > this.x ? 1 : targetX < this.x ? -1 : 0;
@@ -499,6 +520,11 @@ class Entity {
       damage = damage * 1.5;
     }
 
+    this.mana -=
+      this.kind === "mage" ? MAGE_SPELL_MANA_COST : TANK_SPELL_MANA_COST;
+    if (this.mana < 0) this.mana = 0;
+    this.emitBasicAttrsUpdated();
+
     // Apply defense reduction
     damage -= enemy.getAttrs().defense;
     // Ensure damage is non-negative
@@ -507,7 +533,7 @@ class Entity {
     const drops = enemy.takeDamage(damage, this);
     this.connection.enemyHit(damage, this, enemy);
     if (enemy.isDead()) {
-      this.gainExperience(100); // TODO exp
+      this.gainExperience(enemy.dropExperience || 1); // TODO exp
       this.connection.enemyDied(enemy);
     }
     if (drops) {
@@ -562,10 +588,7 @@ class Entity {
       this.hp = 0;
     }
     this.connection.takeDamage(damage, from, this);
-    this.connection.basicAttrsUpdated({
-      hp: this.hp,
-      mana: this.mana,
-    });
+    this.emitBasicAttrsUpdated();
 
     if (this.hp <= 0) {
       return this.die();
@@ -640,10 +663,24 @@ class Entity {
     return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
   }
 
-  heal(healing) {
-    this.hp += healing;
-    // You can add logic to limit the maximum HP if needed
+  heal(player) {
+    if (this.mana < HEALING_SPELL_MANA_COST) return;
+    const attrs = this.getAttrs();
+    const maxHp = player.getAttrs().ho;
+
+    player.hp += attrs.power;
+    if (player.hp > maxHp) player.hp = maxHp;
+
+    this.mana -= HEALING_SPELL_MANA_COST;
+    this.connection.healPlayer(player);
+    this.emitBasicAttrsUpdated();
   }
+
+  emitBasicAttrsUpdated() {
+    this.connection.basicAttrsUpdated({ hp: this.hp, mana: this.mana });
+  }
+
+  receiveHeal(power) {}
 
   useMana(manaCost) {
     if (this.mana >= manaCost) {
@@ -655,54 +692,25 @@ class Entity {
 
   gainExperience(experience) {
     this.experience += experience;
-    const oldLevel = this.level;
-    this.calculateLevel();
-    const newLevel = this.level;
-    this.connection.gainExperience(experience);
-    if (oldLevel < newLevel) this.connection.levelUp(newLevel);
+    // this.connection.gainExperience(experience);
+    this.emitAttributes();
   }
 
-  calculateLevel() {
-    this.level = Math.floor(Math.sqrt(this.experience) / 2) + 1;
+  getLevel() {
+    return Math.floor(Math.sqrt(this.experience / 20)) + 1;
   }
 
-  // addItem({ name, amount = 1 }) {
-  //   const item = createItem(name, amount);
-  //   item.equiped = false;
-
-  //   const existingItemIndex = this.inventory.findIndex(
-  //     (i) => i.name === item.name && i.amount < item.maxStack
-  //   );
-
-  //   if (existingItemIndex !== -1) {
-  //     this.inventory[existingItemIndex].amount += amount;
-
-  //     // Check if the stack exceeds the maximum
-  //     if (this.inventory[existingItemIndex].amount > item.maxStack) {
-  //       const overflowAmount =
-  //         this.inventory[existingItemIndex].amount - item.maxStack;
-  //       this.inventory[existingItemIndex].amount = item.maxStack;
-
-  //       // Create a new item for the overflow
-  //       const overflowItem = { ...item, amount: overflowAmount };
-  //       this.inventory.push(overflowItem);
-  //     }
-  //   } else {
-  //     this.inventory.push(item);
-  //   }
-
-  //   console.log("Adding an item to inventory", item);
-
-  //   this.connection.addItem(this.id, item);
-  //   this.connection.updateInventory(this.id, this.inventory);
-  // }
-
-  // removeItem(item) {
-  //   const index = this.inventory.indexOf(item);
-  //   if (index !== -1) {
-  //     this.inventory.splice(index, 1);
-  //   }
-  // }
+  getLevelPercentage() {
+    let number = Math.sqrt(this.experience / 20) + 1;
+    let numberString = number.toString();
+    let decimalIndex = numberString.indexOf(".");
+    if (decimalIndex === -1) return 0;
+    const result = parseInt(
+      numberString.substring(decimalIndex + 1, decimalIndex + 3)
+    );
+    if (numberString[decimalIndex + 2] === undefined) return result * 10;
+    return result;
+  }
 
   move(doneCb, movedCb) {
     const finish = () => {
@@ -825,6 +833,7 @@ class Entity {
   }
 
   disconnect() {
+    clearTimeout(this.healingTimeout);
     this.stopAll();
     map.removeEntity(this.x, this.y);
   }

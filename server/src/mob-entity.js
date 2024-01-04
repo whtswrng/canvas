@@ -25,6 +25,7 @@ class MobEntity extends Entity {
     respawnInS,
     drops = [],
     map,
+    dropExperience
   }) {
     super({
       id: generateUniqueString(),
@@ -34,7 +35,7 @@ class MobEntity extends Entity {
       kind,
       speed,
       experience,
-      inventory: new Inventory(),
+      inventory: new Inventory(mockConnection),
       map,
       type: "mob",
       connection: mockConnection,
@@ -49,6 +50,7 @@ class MobEntity extends Entity {
     this.originalY = -1;
     this.drops = drops; // {type: 'Varnish', chance: 30, min: 4, max: 8}
     this.autoDefend = autoDefend;
+    this.dropExperience = dropExperience;
   }
 
   // guardArea(range) {

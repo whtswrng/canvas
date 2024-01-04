@@ -24,7 +24,11 @@ async function init() {
   // Set up a connection event for new Socket.IO connections
   io.on("connection", (socket) => {
     console.log("A user connected");
-    const user = new User(socket, [createPlayer('Ferda', socket, 2, 2), createPlayer('Blobko', socket, 5, 9)]);
+    const user = new User(socket, [
+      createPlayer("Ferda", "mage", socket, 7, 7),
+      createPlayer("Blobko", "healer", socket, 5, 9),
+    ]);
+    // const user = new User(socket, [createPlayer('Ferda', socket, 7, 7)]);
     user.init();
 
     // function printMap() {

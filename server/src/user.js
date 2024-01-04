@@ -10,11 +10,12 @@ class User {
     this.playersWithControls = playersWithControls;
     for (const p of playersWithControls) {
       p.player.user = this;
+      p.player.init();
     }
   }
 
   getPlayers() {
-    return this.playersWithControls.map((p) => p.player)
+    return this.playersWithControls.map((p) => p.player);
   }
 
   getPlayerByName(name) {
@@ -31,7 +32,6 @@ class User {
 
   init() {
     this.socket.on("UPDATE_CONTROLS", ({ playerId, list }) => {
-      console.log("============", playerId, list);
       const p = this.playersWithControls.find(
         ({ player }) => player.id === playerId
       );
@@ -42,8 +42,14 @@ class User {
       const p = this.playersWithControls.find(
         ({ player }) => player.id === playerId
       );
-      console.log('using item', itemId)
       if (p) p.player.useItem(itemId);
+    });
+
+    this.socket.on("EQUIP_ITEM", ({ playerId, itemId }) => {
+      const p = this.playersWithControls.find(
+        ({ player }) => player.id === playerId
+      );
+      if (p) p.player.equipById(itemId);
     });
 
     this.socket.on("FORCE_INVENTORY_UPDATED", (data) => {
@@ -54,7 +60,6 @@ class User {
 
     this.socket.on("CELL_CLICKED", (data) => {
       const playerId = data?.playerId;
-      console.log('=======CELLL CLICKED', data)
 
       const p = this.playersWithControls.find(
         ({ player }) => player.id === playerId
@@ -64,7 +69,6 @@ class User {
 
     // Handle disconnections
     this.socket.on("disconnect", () => {
-      console.log("A user disconnected");
       for (const p of this.playersWithControls) {
         p.control.disconnect();
       }
