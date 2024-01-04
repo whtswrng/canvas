@@ -101,18 +101,16 @@ class Entity {
   }
 
   initHealing() {
-    console.log("init healing...");
     const heal = () => {
-      console.log("trying to heal...");
       if (!this.isDead()) {
         const players = this.user.getPlayers();
         for (const p of players) {
           const attrs = p.getAttrs();
-          console.log(p.name, p.hp);
           if (calculatePercentage(p.hp, attrs.hp) <= 80) {
-            console.log("HEAL!");
-            this.heal(p);
-            break;
+            if (this.calculateDistance(this.x, this.y, p.x, p.y) < 7) {
+              this.heal(p);
+              break;
+            }
           }
         }
       }
@@ -122,6 +120,17 @@ class Entity {
       );
     };
     heal();
+  }
+
+  handOverItems(player, items) {
+    if(this.calculateDistance(this.x, this.y, player.x, player.y) > 2) return;
+    for (const id of items) {
+      const item = this.inventory.getItemById(id);
+      if (item) {
+        player.addItem(item);
+      }
+    }
+    this.inventory.removeItemsById(items);
   }
 
   applyItemEffect(item) {

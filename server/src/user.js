@@ -58,6 +58,28 @@ class User {
       }
     });
 
+    this.socket.on("FETCH_PLAYERS", (data, cb) => {
+      for (const p of this.playersWithControls) {
+        p.player.emitInventory();
+      }
+      cb(
+        this.playersWithControls.map((p) => ({
+          name: p.player.name,
+          id: p.player.id,
+        }))
+      );
+    });
+
+    this.socket.on("HAND_OVER_ITEMS", (data) => {
+      const playerId = data?.playerId;
+
+      const p = this.playersWithControls.find(
+        ({ player }) => player.id === playerId
+      );
+      if (p)
+        p.player.handOverItems(this.getPlayerById(data.toPlayerId), data.items);
+    });
+
     this.socket.on("CELL_CLICKED", (data) => {
       const playerId = data?.playerId;
 

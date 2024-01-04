@@ -1,16 +1,37 @@
-import React from "react";
+import React, { useState } from "react";
 import "./inventory.css";
-import { useListen } from "../../listen";
+import { useFetch, useListen } from "../../listen";
 import { Item } from "../../item/item";
 import { socket } from "../../App";
 import { capitalizeFirstLetter } from "../../utils";
 
 export const Inventory = ({ playerId }) => {
   const { data, loading } = useListen("INVENTORY_UPDATED", playerId, true);
+  const { data: players } = useFetch("FETCH_PLAYERS");
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const [selectedItems, setSelectedItems] = useState([]);
 
   const equipedItems = data?.inventory?.filter((i) => i.equiped);
 
+  const handleSelectChange = (e) => {
+    const selectedId = parseInt(e.target.value, 10);
+    const selected = players.find((player) => player.id === selectedId);
+    setSelectedPlayer(selected);
+  };
+
+  const handOverItems = () => {
+    socket.emit("HAND_OVER_ITEMS", {
+      playerId,
+      toPlayerId: selectedPlayer.id,
+      items: selectedItems,
+    });
+  };
+
   const handleItemClick = (item) => {
+    if (selectedPlayer) {
+      setSelectedItems((prev) => [...prev, item.id]);
+      return;
+    }
     if (!item) return;
     if (item.usable) {
       socket.emit("USE_ITEM", { playerId, itemId: item.id });
@@ -40,12 +61,34 @@ export const Inventory = ({ playerId }) => {
           .map((item) => (
             <div
               key={item.id}
-              className={"inventory-item " + (item.usable ? "usable" : "")}
+              className={
+                "inventory-item " +
+                (item.usable ? "usable " : " ") +
+                (selectedPlayer ? "selectable " : " ") +
+                (selectedItems.includes(item.id) ? "selected" : "")
+              }
               onClick={() => handleItemClick(item)}
             >
               <Item item={item} />
             </div>
           ))}
+      </div>
+      <div className="hand-over-items">
+        <h3>Hand over selected items</h3>
+        <select
+          value={selectedPlayer?.id || "none"}
+          onChange={handleSelectChange}
+        >
+          <option key={"none"} value={""}>
+            None
+          </option>
+          {players?.map((player) => (
+            <option key={player.id} value={player.id}>
+              {player.name}
+            </option>
+          ))}
+        </select>
+        <button onClick={handOverItems}>Hand over</button>
       </div>
     </div>
   );

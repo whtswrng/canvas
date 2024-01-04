@@ -51,6 +51,14 @@ class Inventory {
     this.connection.updateInventory(this.getItems());
   }
 
+  removeItemsById(items) {
+    for (const i of items) {
+      this._removeItemById(i);
+    }
+
+    this.connection.updateInventory(this.getItems());
+  }
+
   _removeItem({ name, amount }) {
     let amountLeft = amount;
     const itemsToRemove = [];

@@ -16,6 +16,16 @@
   height: 55px;
 }
 
+.inventory-item.selectable {
+  opacity: 0.4;
+  border: 1px solid gold;
+  cursor: pointer;
+}
+
+.inventory-item.selected {
+  opacity: 1;
+}
+
 .inventory-item.usable {
   cursor: pointer;
 }
@@ -27,4 +37,12 @@
 
 .item-details {
   margin-top: 8px;
+}
+
+.hand-over-items {
+  margin-top: 10px;
+}
+
+.hand-over-items select {
+  margin-right: 10px;
 }
