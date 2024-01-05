@@ -28,16 +28,23 @@ const { STATE } = require("./entity");
 //   },
 // ];
 
-class EntityControl {
-  constructor(entity, controls = []) {
+class EntityController {
+  constructor(entity, controls = [], controlPanel = []) {
     this.entity = entity;
-    this.controls = controls;
+    this.currentControls = { name: "foo", controls };
+    this.controlPanel = controlPanel;
     this.basicActionsInterval = null;
     this.combatActionsInterval = null;
-    this.lastPathIndex = -1;
+    this.nextPathIndex = 0;
     this.lastSpellIndex = -1;
     this.lastState = null;
     this.enabled = false;
+    this.originalPosition = [];
+    this.returningBackFromFight = false;
+
+    this.controlsEnabled = false;
+    this.autoDefendEnabled = false;
+    this.pvpEnabled = false;
   }
 
   disconnect() {
@@ -45,34 +52,31 @@ class EntityControl {
     this.enabled = false;
   }
 
-  setControls(controls) {
-    this.controls = controls;
-    this.lastPathIndex = -1;
+  refreshQuickControls() {
+    this.handleQuickControls()
+  }
+
+  setCurrentControls(name, controls) {
+    console.log("setting controls", controls);
+    this.currentControls = { name, controls };
+    this.nextPathIndex = 0;
     this.lastSpellIndex = -1;
     this.lastState = null;
     this.resetIntervals();
-    this.handleControls(this.entity.state);
     this.handleQuickControls();
+    this.handleControls(this.entity.state);
   }
 
   init() {
     this.entity.registerStateCb(() => this.handleControls());
     this.handleControls(this.entity.state);
     this.handleQuickControls();
+    this.originalPosition = [this.entity.x, this.entity.y];
   }
 
   handleQuickControls() {
-    const autoDefendControl = this.controls.find(
-      (c) => c.type === "autoDefend"
-    );
-    if (autoDefendControl) {
-      this.entity.autoDefend = Boolean(autoDefendControl.actionValue);
-    }
-
-    const controlsControl = this.controls.find((c) => c.type === "controls");
-    if (controlsControl) {
-      this.enabled = controlsControl.actionValue;
-    }
+    this.entity.autoDefend = this.autoDefendEnabled;
+    this.enabled = this.controlsEnabled;
   }
 
   handleControls() {
@@ -81,21 +85,23 @@ class EntityControl {
       if (this.lastState === newState || !this.enabled) return;
       this.lastState = newState;
 
-      console.log("newState", this.entity.name, newState);
+      console.log("newState", this.entity.name, newState, this.returningBackFromFight);
       if ([STATE.IDLE].includes(newState)) {
         this.resetCombatInterval();
         this.handlePathingActions();
-        this.handleBasicActions();
+        if (!this.returningBackFromFight) this.handleBasicActions(); // do not start anything crazy when returning to its path
       }
       if ([STATE.ATTACKING].includes(newState)) {
+        this.originalPosition = [this.entity.x, this.entity.y];
         this.resetBasicActionsInterval();
         this.handleCombatActions();
       }
       if ([STATE.GATHERING, STATE.ATTACKING, STATE.DEATH].includes(newState)) {
-        this.resetBasicActionsInterval()
+        this.resetBasicActionsInterval();
       }
       if ([STATE.MOVING].includes(newState)) {
-        this.handleBasicActions();
+        this.resetCombatInterval();
+        if (!this.returningBackFromFight) this.handleBasicActions(); // do not start anything crazy when returning to its path
       }
     }, 0);
   }
@@ -115,30 +121,29 @@ class EntityControl {
     this.resetCombatInterval();
   }
 
-  handlePathingActions() {
-    const controls = this.controls.filter((c) => c.type === "pathing");
+  async handlePathingActions() {
+    const controls = this.currentControls?.controls?.filter?.((c) => c.type === "pathing");
 
-    if (this.lastPathIndex >= controls.length - 1) this.lastPathIndex = -1;
-
-    for (let i = this.lastPathIndex + 1; i < controls.length; i++) {
+    console.log("handle pathing", this.nextPathIndex);
+    for (let i = this.nextPathIndex; i <= controls.length; i++) {
       const control = controls[i];
+      const a = new ActionControl(control, this.entity);
       if (control) {
+        if (!a.isConditionMet()) continue;
+
         if (control.actionType === "goToPosition") {
           const [x, y] = control.actionValue?.trim()?.split(" ");
-          if (this.entity.x === parseInt(x) && this.entity.y === parseInt(y))
-            continue;
-          const a = new ActionControl(control, this.entity);
-          if (a.isConditionMet()) {
-            this.lastPathIndex = i;
-            return a.execute();
+          if (this.entity.x === parseInt(x) && this.entity.y === parseInt(y)) continue;
+          await a.execute();
+          if (this.entity.calculateDistance(this.entity.x, this.entity.y, x, y) <= 1) {
+            this.returningBackFromFight = false;
+            this.nextPathIndex += 1;
+            if (this.nextPathIndex >= controls.length) this.nextPathIndex = 0;
           }
+          return;
         }
-        if (control.actionType === "followPlayer") {
-          const a = new ActionControl(control, this.entity);
-          if (a.isConditionMet()) {
-            return a.execute();
-          }
-        }
+
+        return a.execute();
       }
     }
   }
@@ -146,7 +151,7 @@ class EntityControl {
   handleBasicActions() {
     if (this.basicActionsInterval) return;
     this.basicActionsInterval = setInterval(() => {
-      const controls = this.controls.filter((c) => c.type === "basic");
+      const controls = this.currentControls?.controls?.filter?.((c) => c.type === "basic");
 
       for (const c of controls) {
         const a = new ActionControl(c, this.entity);
@@ -160,7 +165,21 @@ class EntityControl {
   handleCombatActions() {
     if (this.combatActionsInterval) return;
     this.combatActionsInterval = setInterval(() => {
-      const controls = this.controls.filter((c) => c.type === "combat");
+      if (
+        this.entity.calculateDistance(
+          this.entity.x,
+          this.entity.y,
+          this.originalPosition[0],
+          this.originalPosition[1]
+        ) > 6
+      ) {
+        console.log("setting combat returning back");
+        this.returningBackFromFight = true;
+        this.entity.stopAll(); // return back to original position
+        return;
+      }
+
+      const controls = this.currentControls?.controls?.filter?.((c) => c.type === "combat");
 
       for (const c of controls) {
         const a = new ActionControl(c, this.entity);
@@ -173,7 +192,7 @@ class EntityControl {
 }
 
 module.exports = {
-  EntityControl,
+  EntityController: EntityController,
 };
 
 // // Example Usage

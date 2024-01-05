@@ -1,18 +1,14 @@
 const { map } = require("../globals");
 const { Interactable } = require("../interactable");
 const { createItem } = require("../item");
-const {
-  getRandomInt,
-  generateUniqueString,
-  calculatePercentage,
-} = require("../utils");
+const { getRandomInt, generateUniqueString, calculatePercentage } = require("../utils");
 
 const MAP_REFRESH_RATE_IN_MS = 120;
 const REGEN_INTERVAL = 2000;
 const HEALING_SPELL_COOLDOWN = 500;
 const HEALING_SPELL_MANA_COST = 20;
 const MAGE_SPELL_MANA_COST = 5;
-const TANK_SPELL_MANA_COST = 5;
+const TANK_SPELL_MANA_COST = 0;
 
 const STATE = {
   ATTACKING: "ATTACKING",
@@ -27,8 +23,6 @@ class Entity {
   constructor({
     id,
     name,
-    hp,
-    mana,
     speed,
     kind,
     experience,
@@ -44,14 +38,10 @@ class Entity {
     this.changeStateCb = null;
     this.id = id;
     this.name = name;
-    this.hp = hp;
-    this.maxHp = hp;
     this.type = type;
     this.kind = kind; // rat, light-mage, ...
     this.connection = connection;
     this.autoDefend = autoDefend;
-    this.mana = mana;
-    this.maxMana = hp;
     this.experience = experience;
     this.experience = 33;
     this.interactableObject = null;
@@ -75,6 +65,7 @@ class Entity {
     this.target = null;
     this.attackRange = attackRange;
     this.attackSpeed = attackSpeed;
+    this.updateMovementCb = null;
     this.state = "IDLE";
     // map
     this.map = map;
@@ -89,10 +80,47 @@ class Entity {
     this.equipItemsInInventory();
   }
 
+  generateBaseAttrs() {
+    if (this.kind === "healer")
+      return {
+        hp: 200,
+        hpRegeneration: 5,
+        mana: 200,
+        manaRegeneration: 10,
+        defense: 6,
+        power: 20,
+        critChance: 5,
+      };
+    if (this.kind === "mage")
+      return {
+        hp: 200,
+        hpRegeneration: 5,
+        mana: 200,
+        manaRegeneration: 5,
+        defense: 25,
+        power: 50,
+        critChance: 5,
+      };
+    if (this.kind === "tank")
+      return {
+        hp: 400,
+        hpRegeneration: 10,
+        mana: 0,
+        manaRegeneration: 5,
+        defense: 100,
+        power: 25,
+        critChance: 5,
+      };
+  }
+
   init() {
+    // base attrs
+    this.baseAttrs = this.generateBaseAttrs();
+
     const attrs = this.getAttrs();
     this.hp = attrs.hp;
     this.mana = attrs.mana;
+
     this.initRegenInterval();
     if (this.kind === "healer") {
       this.initHealing();
@@ -114,16 +142,17 @@ class Entity {
           }
         }
       }
-      this.healingTimeout = setTimeout(
-        () => heal(),
-        this.attackSpeed + HEALING_SPELL_COOLDOWN
-      );
+      this.healingTimeout = setTimeout(() => heal(), this.attackSpeed + HEALING_SPELL_COOLDOWN);
     };
     heal();
   }
 
+  registerMovementCb(cb) {
+    this.updateMovementCb = cb;
+  }
+
   handOverItems(player, items) {
-    if(this.calculateDistance(this.x, this.y, player.x, player.y) > 2) return;
+    if (this.calculateDistance(this.x, this.y, player.x, player.y) > 2) return;
     for (const id of items) {
       const item = this.inventory.getItemById(id);
       if (item) {
@@ -234,13 +263,7 @@ class Entity {
 
   getAttrs() {
     const attrs = {
-      hp: 120,
-      hpRegeneration: 5,
-      mana: 100,
-      manaRegeneration: 5,
-      defense: 6,
-      power: 30,
-      critChance: 5,
+      ...this.baseAttrs,
       level: this.getLevel(),
       levelPercentage: this.getLevelPercentage(),
     };
@@ -248,10 +271,7 @@ class Entity {
     for (const item of this.inventory.getItems()) {
       if (item.attrs && item.equiped) {
         for (const attr in item.attrs) {
-          attrs[attr] =
-            attrs[attr] === undefined
-              ? item.attrs[attr]
-              : attrs[attr] + item.attrs[attr];
+          attrs[attr] = attrs[attr] === undefined ? item.attrs[attr] : attrs[attr] + item.attrs[attr];
         }
       }
     }
@@ -491,26 +511,24 @@ class Entity {
   }
 
   isEnemyInRange(enemy, addition = 0) {
-    return (
-      Math.floor(this.calculateDistance(this.x, this.y, enemy.x, enemy.y)) <=
-      this.attackRange + addition
-    );
+    return Math.floor(this.calculateDistance(this.x, this.y, enemy.x, enemy.y)) <= this.attackRange + addition;
   }
 
   isInRange(enemy) {
     if (enemy instanceof Interactable) {
-      return (
-        Math.floor(this.calculateDistance(this.x, this.y, enemy.x, enemy.y)) <=
-        2
-      );
+      return Math.floor(this.calculateDistance(this.x, this.y, enemy.x, enemy.y)) <= 2;
     }
-    return (
-      Math.floor(this.calculateDistance(this.x, this.y, enemy.x, enemy.y)) <= 1
-    );
+    return Math.floor(this.calculateDistance(this.x, this.y, enemy.x, enemy.y)) <= 1;
   }
 
   hitEnemy(enemy) {
     if (enemy.isDead() || this.isDead()) return;
+
+    let manaCost = this.kind === "mage" ? MAGE_SPELL_MANA_COST : TANK_SPELL_MANA_COST;
+    if (this.type === "mob") manaCost = 0;
+
+    if (this.mana - manaCost < 0) return;
+
     console.log("dealing dmg -> ", this.name, enemy.name);
     this.stopMovement();
     // Calculate damage considering crit chance, power, and defense
@@ -519,18 +537,15 @@ class Entity {
     const isCrit = critRoll <= attrs.critChance / 2.5;
 
     // Calculate damage
-    let damage = getRandomInt(
-      Math.floor(attrs.power / 1.05),
-      Math.floor(attrs.power * 1.05)
-    );
+    let damage = getRandomInt(Math.floor(attrs.power / 1.05), Math.floor(attrs.power * 1.05));
 
     if (isCrit) {
       // Apply critical damage multiplier (you can adjust this multiplier)
       damage = damage * 1.5;
     }
 
-    this.mana -=
-      this.kind === "mage" ? MAGE_SPELL_MANA_COST : TANK_SPELL_MANA_COST;
+    this.mana -= manaCost;
+
     if (this.mana < 0) this.mana = 0;
     this.emitBasicAttrsUpdated();
 
@@ -553,9 +568,7 @@ class Entity {
   }
 
   isInFrontOf(otherEntity) {
-    return (
-      this.calculateDistance(this.x, this.y, otherEntity.x, otherEntity.y) < 1.5
-    );
+    return this.calculateDistance(this.x, this.y, otherEntity.x, otherEntity.y) < 1.5;
   }
 
   clickOnCell(cell) {
@@ -569,9 +582,7 @@ class Entity {
 
     if (occupiedBy && occupiedBy.id !== this.id) {
       const e = this.findNearbyEntityById(occupiedBy.id);
-      const myPlayer = this.user
-        .getPlayers()
-        .find((p) => p.id === occupiedBy.id);
+      const myPlayer = this.user.getPlayers().find((p) => p.id === occupiedBy.id);
 
       if (myPlayer) {
         this.goToPosition(x, y);
@@ -603,9 +614,7 @@ class Entity {
       return this.die();
     }
 
-    console.log("taking damage", this.autoDefend, this.attacking);
-    if (this.autoDefend && !this.attacking && !this.isDead())
-      this.attackEnemy(from);
+    if (this.autoDefend && !this.attacking && !this.isDead()) this.attackEnemy(from);
   }
 
   getClosestTarget(type, range = 6) {
@@ -619,7 +628,7 @@ class Entity {
         const cell = playerMap[y][x];
         if (cell.occupiedBy && cell.occupiedBy !== this) {
           if (type && cell.occupiedBy.type !== type) continue;
-          const distance = this.calculateDistance(this.x, this.y, x, y);
+          const distance = this.calculateDistance(this.x, this.y, cell.occupiedBy.x, cell.occupiedBy.y);
           if (distance < closestDistance) {
             closestDistance = distance;
             closestTarget = cell.occupiedBy;
@@ -714,9 +723,7 @@ class Entity {
     let numberString = number.toString();
     let decimalIndex = numberString.indexOf(".");
     if (decimalIndex === -1) return 0;
-    const result = parseInt(
-      numberString.substring(decimalIndex + 1, decimalIndex + 3)
-    );
+    const result = parseInt(numberString.substring(decimalIndex + 1, decimalIndex + 3));
     if (numberString[decimalIndex + 2] === undefined) return result * 10;
     return result;
   }
@@ -725,32 +732,27 @@ class Entity {
     const finish = () => {
       this.stopMovement();
       this.targetLocation = null;
+      console.log("calling finish promise");
       doneCb?.();
     };
 
     const doMove = () => {
       if (this.movingIsBlocked) return;
       if (!this.moving || !this.targetLocation) return this.stopMovement();
-      const [dx, dy] = this.getDirectionsToTarget(
-        this.targetLocation[0],
-        this.targetLocation[1]
-      );
+      const [dx, dy] = this.getDirectionsToTarget(this.targetLocation[0], this.targetLocation[1]);
       const x = this.x + dx;
       const y = this.y + dy;
 
-      if (this.x == this.targetLocation[0] && this.y === this.targetLocation[1])
-        return this.stopMovement();
+      if (this.x == this.targetLocation[0] && this.y === this.targetLocation[1]) return this.stopMovement();
 
       if (this.map.canMove(x, y)) {
         if (this.map.moveEntity(this.x, this.y, x, y)) {
           this.x = x;
           this.y = y;
+          this.updateMovementCb?.();
+          console.log("moved to", this.x, this.y);
           movedCb?.();
-          if (
-            this.targetLocation &&
-            this.targetLocation[0] === x &&
-            this.targetLocation[1] === y
-          ) {
+          if (this.targetLocation && this.targetLocation[0] === x && this.targetLocation[1] === y) {
             finish();
           }
         }
@@ -762,15 +764,7 @@ class Entity {
     if (this.hp == 0) return;
     if (this.movingTimeout) clearTimeout(this.movingTimeout);
     if (!this.targetLocation) return finish();
-    if (
-      this.calculateDistance(
-        this.x,
-        this.y,
-        this.targetLocation[0],
-        this.targetLocation[1]
-      ) < 1
-    )
-      return finish();
+    if (this.calculateDistance(this.x, this.y, this.targetLocation[0], this.targetLocation[1]) < 1) return finish();
 
     this.moving = true;
 
@@ -833,18 +827,17 @@ class Entity {
 
   stopMovement() {
     clearTimeout(this.movingTimeout);
-    this.movingTimeout = setTimeout(
-      () => (this.movingIsBlocked = false),
-      this.movementSpeed
-    );
+    this.movingTimeout = setTimeout(() => (this.movingIsBlocked = false), this.movementSpeed);
     this.moving = false;
     if (this.state === STATE.MOVING) this.changeState(STATE.IDLE);
   }
 
   disconnect() {
+    this.hp = 0;
     clearTimeout(this.healingTimeout);
     this.stopAll();
     map.removeEntity(this.x, this.y);
+    console.log("removing from map");
   }
 }
 

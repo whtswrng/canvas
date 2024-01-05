@@ -11,13 +11,11 @@ class MockedConnection extends Connection {
   updateMap() {}
 }
 
-const mockConnection = new MockedConnection('', mockedSocket);
+const mockConnection = new MockedConnection("", mockedSocket);
 
 class MobEntity extends Entity {
   constructor({
     name,
-    hp,
-    mana,
     kind,
     speed,
     experience,
@@ -25,13 +23,19 @@ class MobEntity extends Entity {
     respawnInS,
     drops = [],
     map,
-    dropExperience
+    dropExperience,
+    attrs = {
+      hp: 10,
+      mana: 0,
+      defense: 10,
+      power: 10,
+      hpRegeneration: 20,
+      manaRegeneration: 50,
+    },
   }) {
     super({
       id: generateUniqueString(),
       name,
-      hp,
-      mana,
       kind,
       speed,
       experience,
@@ -42,8 +46,8 @@ class MobEntity extends Entity {
       attackRange: 1,
       attackSpeed: 1200,
     });
-    this.originalHp = hp;
-    this.originalMana = mana;
+    this.originalHp = attrs.hp;
+    this.originalMana = attrs.mana;
     this.guardInterval = null;
     this.respawnInS = respawnInS;
     this.originalX = -1;
@@ -51,6 +55,11 @@ class MobEntity extends Entity {
     this.drops = drops; // {type: 'Varnish', chance: 30, min: 4, max: 8}
     this.autoDefend = autoDefend;
     this.dropExperience = dropExperience;
+    this.baseAttrs = attrs;
+  }
+
+  generateBaseAttrs() {
+    return this.baseAttrs;
   }
 
   // guardArea(range) {
@@ -117,14 +126,14 @@ class MobEntity extends Entity {
   }
 
   spawn() {
-    console.log('==========+RESPAWN=========');
+    console.log("==========+RESPAWN=========");
     this.hp = this.originalHp;
     this.mana = this.originalMana;
     this.x = this.originalX;
     this.y = this.originalY;
 
     const o = this.map.getObject(this.x, this.y);
-    if(o.occupiedBy || o.material) return setTimeout(() => this.spawn(), 4000);
+    if (o.occupiedBy || o.material) return setTimeout(() => this.spawn(), 4000);
 
     this.initRegenInterval();
     this.map.placeEntity(this.x, this.y, this);

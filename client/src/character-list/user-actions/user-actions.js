@@ -2,20 +2,17 @@ import { useState } from "react";
 import { socket } from "../../App";
 import { useControls } from "../control-panel/controls-context";
 
-export const UserActions = () => {
+export const UserActions = ({playerId}) => {
   const [autoAttack, setAutoAttack] = useState(false);
   const [autoDefend, setAutoDefend] = useState(false);
   const [controls, setControls] = useState(false);
 
-  const { emit, replace } = useControls();
+  const {panelName} = useControls();
 
   const handleAutoDefend = () => {
     setAutoDefend((prevEnabled) => {
       const s = !prevEnabled;
-      replace({
-        type: 'autoDefend',
-        actionValue: s
-      })
+      socket.emit("SET_AUTO_DEFEND_STATE", {playerId, state: s})
       return s;
     });
   };
@@ -27,10 +24,7 @@ export const UserActions = () => {
   const handleControls = () => {
     setControls((prevEnabled) => {
       const s = !prevEnabled;
-      replace({
-        type: 'controls',
-        actionValue: s
-      })
+      socket.emit("SET_CONTROLS_STATE", {playerId, state: s, name: panelName})
       return s;
     });
   };

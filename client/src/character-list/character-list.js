@@ -26,11 +26,11 @@ const CharacterList = () => {
 
   return (
     <div className="character-list-container">
-      {characters.map((character) => (
-        <ControlsProvider key={character.playerId} playerId={character.playerId}>
+      <ControlsProvider>
+        {characters.map((character) => (
           <Character character={character} />
-        </ControlsProvider>
-      ))}
+        ))}
+      </ControlsProvider>
     </div>
   );
 };

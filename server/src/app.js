@@ -22,14 +22,15 @@ server.listen(PORT, () => {
 
 async function init() {
   // Set up a connection event for new Socket.IO connections
-  io.on("connection", (socket) => {
+  io.on("connection", async(socket) => {
     console.log("A user connected");
     const user = new User(socket, [
       createPlayer("Ferda", "mage", socket, 7, 7),
-      createPlayer("Blobko", "healer", socket, 5, 9),
+      // createPlayer("Blobko", "healer", socket, 5, 9),
     ]);
+    await user.initControlPanel();
     // const user = new User(socket, [createPlayer('Ferda', socket, 7, 7)]);
-    user.init();
+    await user.init();
 
     // function printMap() {
     //   console.log("--------------------------");

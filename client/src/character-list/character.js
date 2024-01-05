@@ -106,7 +106,7 @@ export const Character = ({ character: defaultChar }) => {
         </div>
 
         <Effects playerId={playerId} />
-        <UserActions />
+        <UserActions playerId={playerId} />
 
         <div className="actions">
           <button className="action" onClick={() => toggleState("panel")}>

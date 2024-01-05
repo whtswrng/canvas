@@ -1,38 +1,77 @@
-import React, { useState } from "react";
+import React, { memo, useMemo, useState } from "react";
 import Control from "./control";
 import "./control-panel.css";
 import { useFetch, useListen } from "../../listen";
-import { ControlsProvider } from "./controls-context";
+import { ControlsProvider, useControls } from "./controls-context";
+import { socket } from "../../App";
 
-export const ControlPanel = ({ playerId }) => {
-  const { data, loading } = useFetch("FETCH_CONTROL_PANEL");
-  const [controlPanel, setControlPanel] = useState(null);
-  const [currentControls, setCurrentControls] = useState();
+export const ControlPanel = memo(({ playerId }) => {
+  const { data: _data, loading } = useFetch("FETCH_CONTROL_PANEL");
+  const { data: panelData } = useListen("CONTROL_PANEL_UPDATED");
+  const { changeTo, panelName: currentPanelName } = useControls();
+
+  const data = panelData?.panel ?? _data?.panel;
 
   function handleControlPanelChange(event) {
     const val = event.target.value;
-    setControlPanel(val);
+    changeTo(val);
   }
 
-  // if(loading) return <span>...</span>
+  function addNewControlPanel() {
+    const name = window.prompt("Name of the panel");
+    socket.emit("ADD_CONTROL_PANEL", { name });
+  }
+
+  function deleteControlPanel() {
+    socket.emit("DELETE_CONTROL_PANEL", { name: currentPanelName });
+  }
+
+  function getControls(type) {
+    const panel = data?.find((p) => p.name === currentPanelName);
+    return panel?.controls.filter((e) => e.type === type) ?? [];
+  }
+
+  function createControl(payload) {
+    const panel = data?.find((p) => p.name === currentPanelName);
+    if (!panel) return;
+
+    const newControls = [...panel?.controls, payload];
+    socket.emit("UPDATE_CONTROLS", { playerId, controls: newControls, name: currentPanelName });
+  }
+
+  function removeAction(controlType, action) {
+    const panel = data?.find((p) => p.name === currentPanelName);
+    if (!panel) return;
+
+    console.log("here", action);
+    const controls = panel.controls.filter((c) => c !== action);
+    console.log(controls);
+    socket.emit("UPDATE_CONTROLS", { playerId, controls, name: currentPanelName });
+  }
 
   return (
     <div className="control-panel">
       {data && (
-        <div>
-          <label>Condition:</label>
-          <select value={controlPanel} onChange={handleControlPanelChange}>
+        <div style={{ marginTop: 10 }}>
+          <select value={currentPanelName} onChange={handleControlPanelChange}>
             <option value="">None</option>
-            {data.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.value}
+            {data?.map((option) => (
+              <option key={option.name} value={option.name}>
+                {option.name}
               </option>
             ))}
           </select>
+          <button style={{ marginLeft: 5, marginRight: 5 }} onClick={addNewControlPanel}>
+            New
+          </button>
+          <button onClick={deleteControlPanel}>Remove current</button>
         </div>
       )}
 
       <Control
+        list={getControls("combat")}
+        createControl={createControl}
+        removeAction={removeAction}
         type="combat"
         title="Combat actions"
         conditionOptions={[{ value: "ifHp", label: "If my hp is" }]}
@@ -49,6 +88,9 @@ export const ControlPanel = ({ playerId }) => {
         playerId={playerId}
         title="Pathing"
         type="pathing"
+        list={getControls("pathing")}
+        createControl={createControl}
+        removeAction={removeAction}
         conditionOptions={[
           { value: "ifHp", label: "If my hp is" },
           { value: "ifMana", label: "If my mana is" },
@@ -61,12 +103,18 @@ export const ControlPanel = ({ playerId }) => {
           { value: "isLowerThan", label: "Lower" },
           { value: "isHigherThan", label: "Higher" },
         ]}
-        actionTypes={[{ value: "goToPosition", label: "Go to position" }, { value: "followPlayer", label: "Follow player" }]}
+        actionTypes={[
+          { value: "goToPosition", label: "Go to position" },
+          { value: "followPlayer", label: "Follow player" },
+        ]}
         valueOption={true}
       />
       <Control
         playerId={playerId}
         title="Basic actions"
+        list={getControls("basic")}
+        createControl={createControl}
+        removeAction={removeAction}
         type="basic"
         conditionOptions={[
           { value: "ifHp", label: "If my hp is" },
@@ -88,7 +136,6 @@ export const ControlPanel = ({ playerId }) => {
         ]}
         valueOption={true}
       />
-
     </div>
   );
-};
+});

@@ -1,7 +1,7 @@
 const { MobEntity } = require("./mob-entity");
 const { createTree } = require("./game-map");
 const { Material } = require("./material");
-const { EntityControl } = require("./entity/entity-control");
+const { EntityController } = require("./entity/entity-controller");
 const { map } = require("./globals");
 const { Connection } = require("./connection");
 const { Entity } = require("./entity/entity");
@@ -41,16 +41,15 @@ tree.placeMaterial();
 
 const enemy = new MobEntity({
   name: "Rat",
-  hp: 60,
-  mana: 0,
   kind: "rat",
   speed: 0,
   map,
   experience: 1,
   respawnInS: 2,
   drops: [{ name: "Varnish", min: 1, max: 3, chance: 99 }],
-  dropExperience: 50
+  dropExperience: 50,
 });
+enemy.init();
 
 const controls = [
   {
@@ -85,8 +84,17 @@ const controls = [
     conditionValue: "",
     conditionComparisonValue: "",
   },
+  {
+    type: "pathing",
+    actionType: "goToPosition",
+    actionValue: "7 5",
+    condition: "",
+    conditionValue: "",
+    conditionComparisonValue: "",
+  },
 ];
-const ec = new EntityControl(enemy, controls);
+
+const ec = new EntityController(enemy, controls);
 enemy.placeEntity(11, 10); // Place an enemy nearby
 ec.init();
 
@@ -115,9 +123,9 @@ function createPlayer(name, kind, socket, x, y) {
     inventory,
   });
 
-  p.equipByName("Simple axe")
+  p.equipByName("Simple axe");
 
-  const entityControl = new EntityControl(p, []);
+  const entityControl = new EntityController(p, []);
   p.placeEntity(x, y); // Place the player at the center of the map
   entityControl.init();
 

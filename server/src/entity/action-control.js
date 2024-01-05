@@ -8,19 +8,15 @@ class ActionControl {
   }
 
   isConditionMet() {
-    if (
-      !this.control.condition ||
-      !this.control.conditionValue ||
-      !this.control.conditionComparisonValue
-    )
-      return true;
+    if (!this.control.condition || !this.control.conditionValue || !this.control.conditionComparisonValue) return true;
 
     const attr = {
       ifHp: (operatorFn, compValue) => operatorFn(compValue, this.entity.hp),
       ifTargetLvl: (operatorFn, compValue) => {
+        compValue = parseInt(compValue);
         const type = this.entity.type === "mob" ? "player" : "mob";
-        const enemy = this.entity.getClosestTarget(type, 6);
-        if (enemy && operatorFn(compValue, enemy.level)) {
+        const enemy = this.entity.getClosestTarget(type, this.entity.type === "player" ? 5 : 4);
+        if (enemy && operatorFn(compValue, enemy.getLevel())) {
           return enemy;
         }
         return null;
@@ -49,10 +45,7 @@ class ActionControl {
       // TODO convert %!
     }
 
-    const result = attr[this.control.condition](
-      operator[this.control.conditionValue],
-      compValue
-    );
+    const result = attr[this.control.condition](operator[this.control.conditionValue], compValue);
     this.conditionResult = result;
     return !!result;
   }
@@ -66,7 +59,7 @@ class ActionControl {
       useItem: this.useItem.bind(this),
       attackFriendlyTarget: this.attackFriendlyTarget.bind(this),
     };
-    actions[this.control.actionType]?.();
+    return actions[this.control.actionType]?.();
   }
 
   attackFriendlyTarget() {
@@ -83,7 +76,7 @@ class ActionControl {
 
   execGoTo() {
     const [x, y] = this.control.actionValue.trim().split(" ");
-    this.entity.goToPosition(parseInt(x), parseInt(y));
+    return this.entity.goToPosition(parseInt(x), parseInt(y));
   }
 
   attack() {
