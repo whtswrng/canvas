@@ -10,8 +10,10 @@ const { Interactable } = require("./interactable");
 const { createItem } = require("./item");
 const { ShopInteraction } = require("./interactions/shop-interaction");
 const { Inventory } = require("./entity/inventory");
+const { StorageInteraction } = require("./interactions/storage-interaction");
 
 const shopInteraction = new ShopInteraction();
+const storageInteraction = new StorageInteraction();
 
 const shop = new Interactable({
   name: "Magic shop",
@@ -22,6 +24,17 @@ const shop = new Interactable({
   interaction: shopInteraction,
 });
 shop.place();
+
+
+const storage = new Interactable({
+  name: "Storage",
+  description: "You can store your items here.",
+  x: 7,
+  y: 3,
+  map,
+  interaction: storageInteraction,
+});
+storage.place();
 
 const tree = new Material({
   type: "tree",

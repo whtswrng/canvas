@@ -57,6 +57,10 @@ export const Character = ({ character: defaultChar }) => {
     });
   };
 
+  const close = () => {
+    setState('map');
+  }
+
   return (
     <div className="card character-container">
       <div>
@@ -135,7 +139,7 @@ export const Character = ({ character: defaultChar }) => {
       {state === "panel" && <ControlPanel playerId={playerId} />}
       {state === "inventory" && <Inventory playerId={playerId} />}
       {state === "interacting" && (
-        <Interaction playerId={playerId} data={interactionData} />
+        <Interaction playerId={playerId} data={interactionData} close={close} />
       )}
     </div>
   );

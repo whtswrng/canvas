@@ -1,5 +1,5 @@
 .interaction-options {
-    margin-bottom: 10px;
+  margin-bottom: 10px;
 }
 
 .interaction-option {
@@ -46,6 +46,10 @@
   margin-right: 3px;
 }
 
+.interaction-option-item.selected {
+  opacity: 1;
+}
+
 .inventory-item img {
   max-width: 100%;
   height: auto;
@@ -53,4 +57,31 @@
 
 .item-details {
   margin-top: 8px;
+}
+
+.storage-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(54px, 1fr));
+  gap: 6px;
+  border-bottom: 1px solid #bcbcbc;
+  padding: 5px;
+}
+
+.storage-item {
+  opacity: 0.5;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  overflow: hidden;
+  width: 55px;
+  height: 55px;
+  margin-top: 5px;
+  margin-right: 3px;
+}
+
+.storage-item:hover {
+  cursor: pointer;
+}
+
+.storage-item.selected {
+  opacity: 1;
 }
