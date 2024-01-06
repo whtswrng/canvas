@@ -9,6 +9,10 @@ class Connection {
     return this.socket.on(event, data, cb);
   }
 
+  off(event, listener) {
+    return this.socket.off(event, listener);
+  }
+
   emit(event, data) {
     this.socket.emit(event, data);
   }

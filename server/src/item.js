@@ -22,12 +22,26 @@ const items = {
     rarity: "common",
     maxStack: 10,
     description: "Just a basic potion",
-    type: "material",
+    type: "potion",
     usable: true,
     effect: {
       expireInMinutes: 1,
       attrs: {
         defense: 10
+      }
+    }
+  },
+  "Common power potion": {
+    name: "Common power potion",
+    rarity: "common",
+    maxStack: 10,
+    description: "Just a basic potion",
+    type: "potion",
+    usable: true,
+    effect: {
+      expireInMinutes: 1,
+      attrs: {
+        power: 10
       }
     }
   },

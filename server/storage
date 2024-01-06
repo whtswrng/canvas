@@ -62,6 +62,22 @@
         "condition": "",
         "conditionValue": "",
         "conditionComparisonValue": ""
+      },
+      {
+        "type": "basic",
+        "actionType": "attackEnemy",
+        "actionValue": "",
+        "condition": "",
+        "conditionValue": "",
+        "conditionComparisonValue": ""
+      },
+      {
+        "type": "transition",
+        "actionType": "transitionTo",
+        "actionValue": "Store items",
+        "condition": "ifMana",
+        "conditionValue": "isLowerThan",
+        "conditionComparisonValue": "90%"
       }
     ]
   },
@@ -103,6 +119,19 @@
         "condition": "ifItemInInventory",
         "conditionValue": "isHigherThan",
         "conditionComparisonValue": "11 Oak Log"
+      }
+    ]
+  },
+  {
+    "name": "Follow Blobko",
+    "controls": [
+      {
+        "type": "pathing",
+        "actionType": "followPlayer",
+        "actionValue": "Blobko",
+        "condition": "",
+        "conditionValue": "",
+        "conditionComparisonValue": ""
       }
     ]
   }

@@ -23,7 +23,7 @@ class ShopInteraction {
       ],
       description:
         "You can buy a lot of interesting stuff in my place my friend!",
-      action: "buying",
+      action: "pickFromOptions",
       title: "Magic shop",
       actionButton: "Buy",
     };

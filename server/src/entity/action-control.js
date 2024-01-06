@@ -189,7 +189,6 @@ class ActionControl {
       this.conditionResult = this.entity.getClosestTarget(type);
     }
     if (!this.conditionResult) return; // no enemy found
-    console.log("=======,", this.conditionResult);
     this.entity.attackEnemy(this.conditionResult);
     this.conditionResult = null;
   }

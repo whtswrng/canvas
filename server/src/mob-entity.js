@@ -62,42 +62,6 @@ class MobEntity extends Entity {
     return this.baseAttrs;
   }
 
-  // guardArea(range) {
-  //   this.guardInterval = setInterval(() => {
-  //     if (this.isDead()) return;
-  //     if (this.attacking) {
-  //       if (
-  //         this.calculateDistance(
-  //           this.x,
-  //           this.y,
-  //           this.originalX,
-  //           this.originalY
-  //         ) > 14
-  //       ) {
-  //         this.stop();
-  //         this.goToPosition(this.originalX, this.originalY);
-  //       }
-  //     } else {
-  //       if (this.moving) return;
-  //       const target = this.getClosestTarget("player", range);
-  //       if (target) {
-  //         this.attackEnemy(target);
-  //       } else {
-  //         if (
-  //           this.calculateDistance(
-  //             this.x,
-  //             this.y,
-  //             this.originalX,
-  //             this.originalY
-  //           ) > 8
-  //         ) {
-  //           this.goToPosition(this.originalX, this.originalY);
-  //         }
-  //       }
-  //     }
-  //   }, 400);
-  // }
-
   die() {
     let drops = super.die();
     for (const o of this.drops) {

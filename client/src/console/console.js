@@ -1,10 +1,10 @@
 // EmptyDiv.js
-import React, { useEffect, useRef, useState } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import { Hook, Console as _Console, Decode } from "console-feed";
 import { socket } from "../App";
 import "./console.css";
 
-const Console = () => {
+const Console = memo(() => {
   const [logs, setLogs] = useState([]);
   const [autoScroll, setAutoScroll] = useState(true);
   const consoleRef = useRef(null);
@@ -14,6 +14,8 @@ const Console = () => {
     //   console.log(log);
     //   setLogs((logs) => [...logs, Decode(log)]);
     // });
+
+    console.log("init listen============");
 
     const listener = socket.on("TAKE_DAMAGE", ({ damage, from, to }) => {
       addLog({
@@ -101,6 +103,6 @@ const Console = () => {
 
     return `${hours}:${minutes}:${seconds}`;
   }
-};
+});
 
 export default Console;

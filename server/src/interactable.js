@@ -25,13 +25,17 @@ class Interactable {
     const reqId = generateUniqueString();
     const result = { ...this.interaction.generateData(entity), reqId };
     entity.connection.sendInteractionData(result);
+
+    const handleFn = (data) => {
+      this.handleSocketInteraction(entity, data);
+      entity.connection.off("INTERACT", handleFn);
+    };
+
+    entity.connection.on("INTERACT", handleFn);
+
     this.activeMap = {
       [entity.id]: reqId,
     };
-
-    entity.connection.on("INTERACT", (data) => {
-      this.handleSocketInteraction(entity, data);
-    });
 
     return result;
   }

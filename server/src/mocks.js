@@ -11,8 +11,10 @@ const { createItem } = require("./item");
 const { ShopInteraction } = require("./interactions/shop-interaction");
 const { Inventory } = require("./entity/inventory");
 const { StorageInteraction } = require("./interactions/storage-interaction");
+const { AlchemyInteraction } = require("./interactions/alchemy-interaction");
 
 const shopInteraction = new ShopInteraction();
+const alchemyInteraction = new AlchemyInteraction();
 const storageInteraction = new StorageInteraction();
 
 const shop = new Interactable({
@@ -35,6 +37,16 @@ const storage = new Interactable({
 });
 storage.place();
 
+const alchemy = new Interactable({
+  name: "Alchemy",
+  description: "You can craft your potions here.",
+  x: 12,
+  y: 3,
+  map,
+  interaction: alchemyInteraction,
+});
+alchemy.place();
+
 const tree = new Material({
   type: "tree",
   name: "Tall tree",
@@ -51,7 +63,7 @@ const tree = new Material({
 });
 tree.placeMaterial();
 
-const mob1 = createMob('Rat', 10, 11);
+const mob1 = createMob("Rat", 10, 13);
 
 function createMob(name, x, y) {
   const enemy = new MobEntity({
@@ -78,7 +90,7 @@ function createMob(name, x, y) {
     {
       type: "pathing",
       actionType: "goToPosition",
-      actionValue: `${x-1} ${y}`,
+      actionValue: `${x - 1} ${y}`,
       condition: "",
       conditionValue: "",
       conditionComparisonValue: "",
@@ -86,7 +98,7 @@ function createMob(name, x, y) {
     {
       type: "pathing",
       actionType: "goToPosition",
-      actionValue: `${x+5} ${y+2}`,
+      actionValue: `${x + 5} ${y + 2}`,
       condition: "",
       conditionValue: "",
       conditionComparisonValue: "",
@@ -109,6 +121,7 @@ function createPlayer(name, kind, socket, x, y) {
   inventory.addItem({ name: "Simple axe" });
   inventory.addItem({ name: "Oak Log", amount: 10 });
   inventory.addItem({ name: "Oak Log", amount: 10 });
+  inventory.addItem({ name: "Varnish", amount: 4 });
   inventory.addItem({ name: "Oak Log", amount: 10 });
   inventory.addItem({ name: "Common defense potion", amount: 4 });
 
@@ -137,5 +150,5 @@ function createPlayer(name, kind, socket, x, y) {
 module.exports = {
   enemy: mob1,
   createPlayer,
-  createMob
+  createMob,
 };

@@ -45,6 +45,7 @@ class Entity {
     this.experience = experience;
     this.experience = 33;
     this.interactableObject = null;
+    this.secondaryClass = this.generateSecondaryClass();
     this.equiped = {
       weapon: null,
       secondary: null,
@@ -78,6 +79,27 @@ class Entity {
     this.healingTimeout = null;
     this.startEmitMap();
     this.equipItemsInInventory();
+  }
+
+  generateSecondaryClass() {
+    if (this.kind === "healer")
+      return {
+        name: "alchemy",
+        level: 0,
+        maxLevel: 350,
+      };
+    if (this.kind === "mage")
+      return {
+        name: "enchanting",
+        level: 0,
+        maxLevel: 350,
+      };
+    if (this.kind === "tank")
+      return {
+        name: "armorsmith",
+        level: 0,
+        maxLevel: 350,
+      };
   }
 
   generateBaseAttrs() {
@@ -145,6 +167,12 @@ class Entity {
       this.healingTimeout = setTimeout(() => heal(), this.attackSpeed + HEALING_SPELL_COOLDOWN);
     };
     heal();
+  }
+
+  increaseSecondaryClassLvl() {
+    this.secondaryClass.level += 1;
+    this.emitAttributes();
+    this.connection.emitInfo(`Your ${this.secondaryClass.name} lvl was increased by 1`);
   }
 
   registerMovementCb(cb) {
@@ -266,6 +294,7 @@ class Entity {
       ...this.baseAttrs,
       level: this.getLevel(),
       levelPercentage: this.getLevelPercentage(),
+      secondaryClass: this.secondaryClass,
     };
     // items
     for (const item of this.inventory.getItems()) {
@@ -607,6 +636,7 @@ class Entity {
 
   // Methods to interact with the entity
   takeDamage(damage, from) {
+    console.log(this.name, "is taking damage from: ", from.name);
     this.hp -= damage;
     if (this.hp <= 0) {
       this.hp = 0;
@@ -734,9 +764,20 @@ class Entity {
   }
 
   gainExperience(experience) {
-    this.experience += experience;
+    const myPlayers = this.user.getPlayers().map((p) => p.id);
+    const entities = this.getNearbyEntities().filter((p) => myPlayers.includes(p.id));
+    const finalExp = experience / (entities.length ?? 1);
+
+    for (const e of entities) {
+      e.doGainExperience(finalExp);
+    }
+  }
+
+  doGainExperience(finalExp) {
+    this.experience += finalExp;
     // this.connection.gainExperience(experience);
     this.emitAttributes();
+    this.connection.emitInfo(`${this.name} gained ${finalExp} experience.`);
   }
 
   getLevel() {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Attributes } from "./attributes";
 import { Map } from "../map/map";
 import { useListen } from "../listen";
@@ -22,11 +22,13 @@ export const Character = ({ character: defaultChar }) => {
   const { data: enemyHit } = useListen("ENEMY_HIT", playerId);
   const { data: activePanel } = useListen("ACTIVE_CONTROL_PANEL", playerId);
 
-  useEffect(() => {}, [_stateData]);
+  const prevInteractionData = usePrevious({interactionData})
 
   useEffect(() => {
     if (interactionData && !activePanel?.panelName) {
-      setState("interacting");
+      if (prevInteractionData.interactionData !== interactionData) {
+        setState("interacting");
+      }
     }
   }, [interactionData, activePanel]);
 
@@ -166,3 +168,11 @@ export const Character = ({ character: defaultChar }) => {
     if (playerState === "walking") return "white";
   }
 };
+
+function usePrevious(value) {
+  const ref = useRef();
+  useEffect(() => {
+    ref.current = value;
+  });
+  return ref.current;
+}

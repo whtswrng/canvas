@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "./interaction.css";
 import { Item } from "../../item/item";
 import { socket } from "../../App";
+import { capitalizeFirstLetter, generateUniqueString } from "../../utils";
 
 export const Interaction = ({ playerId, data: _data, close }) => {
   const data = _data.data;
@@ -10,7 +11,7 @@ export const Interaction = ({ playerId, data: _data, close }) => {
     <div className="interaction-container">
       <h3>{data.title}</h3>
       <div className="interaction-description">{data.description}</div>
-      {data.action === "buying" && <ShopInteraction data={data} playerId={playerId} close={close} />}
+      {data.action === "pickFromOptions" && <ShopInteraction data={data} playerId={playerId} close={close} />}
       {data.action === "storing" && <StorageInteraction data={data} playerId={playerId} close={close} />}
     </div>
   );
@@ -20,6 +21,7 @@ const ShopInteraction = ({ playerId, data, close }) => {
   const [selectedOption, setSelectedOption] = useState(null);
 
   const handleAction = () => {
+    console.log("EMMITING INTERACTING...");
     socket.emit("INTERACT", {
       reqId: data.reqId,
       playerId,
@@ -47,6 +49,14 @@ const ShopInteraction = ({ playerId, data, close }) => {
                   return (
                     <div className="interaction-option-item" style={{ opacity: r.fulfilled ? 1 : 0.55 }}>
                       <Item item={r.item} />
+                    </div>
+                  );
+                if (r.type === "secondaryClass")
+                  return (
+                    <div className="interaction-option-item" style={{ opacity: r.fulfilled ? 1 : 0.55 }}>
+                      <Item
+                        item={{ name: capitalizeFirstLetter(r.name), level: r.level, id: generateUniqueString() }}
+                      />
                     </div>
                   );
                 return <span>unknown</span>;

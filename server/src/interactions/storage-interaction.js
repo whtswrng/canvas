@@ -1,18 +1,6 @@
 const { STATE } = require("../entity/entity");
 const { createItem } = require("../item");
 
-function createItemOption(entity, item, requirementItems) {
-  return {
-    type: "item",
-    item: item,
-    requirements: requirementItems.map((i) => ({
-      type: "item",
-      fulfilled: entity.hasItems([i]),
-      item: i,
-    })),
-  };
-}
-
 class StorageInteraction {
   constructor(storedItems = []) {
     this.storedItems = [];

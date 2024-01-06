@@ -1,4 +1,5 @@
-import React from 'react';
+import React from "react";
+import { capitalizeFirstLetter } from "../utils";
 
 export const Attributes = ({ attrs }) => {
   return (
@@ -22,6 +23,15 @@ export const Attributes = ({ attrs }) => {
       <div className="attribute">
         <div className="attribute-name">Critical Chance:</div>
         <div className="attribute-value">{attrs.critChance}%</div>
+      </div>
+      <div className="attribute">
+        ---
+      </div>
+      <div className="attribute">
+        <div className="attribute-name">{capitalizeFirstLetter(attrs.secondaryClass.name)}</div>
+        <div className="attribute-value">
+          {attrs.secondaryClass.level}/{attrs.secondaryClass.maxLevel}
+        </div>
       </div>
     </div>
   );
