@@ -25,7 +25,6 @@ const shop = new Interactable({
 });
 shop.place();
 
-
 const storage = new Interactable({
   name: "Storage",
   description: "You can store your items here.",
@@ -52,64 +51,54 @@ const tree = new Material({
 });
 tree.placeMaterial();
 
-const enemy = new MobEntity({
-  name: "Rat",
-  kind: "rat",
-  speed: 0,
-  map,
-  experience: 1,
-  respawnInS: 2,
-  drops: [{ name: "Varnish", min: 1, max: 3, chance: 99 }],
-  dropExperience: 50,
-});
-enemy.init();
+const mob1 = createMob('Rat', 10, 11);
 
-const controls = [
-  {
-    type: "autoDefend",
-    actionValue: true,
-  },
-  {
-    type: "controls",
-    actionValue: true,
-  },
-  {
-    type: "basic",
-    actionType: "attackEnemy",
-    actionValue: "",
-    condition: "ifTargetLvl",
-    conditionValue: "isLowerThan",
-    conditionComparisonValue: "99",
-  },
-  {
-    type: "pathing",
-    actionType: "goToPosition",
-    actionValue: "11 10",
-    condition: "",
-    conditionValue: "",
-    conditionComparisonValue: "",
-  },
-  {
-    type: "pathing",
-    actionType: "goToPosition",
-    actionValue: "7 10",
-    condition: "",
-    conditionValue: "",
-    conditionComparisonValue: "",
-  },
-  {
-    type: "pathing",
-    actionType: "goToPosition",
-    actionValue: "7 5",
-    condition: "",
-    conditionValue: "",
-    conditionComparisonValue: "",
-  },
-];
+function createMob(name, x, y) {
+  const enemy = new MobEntity({
+    name: name,
+    kind: "rat",
+    speed: 0,
+    map,
+    experience: 1,
+    respawnInS: 4,
+    drops: [{ name: "Varnish", min: 1, max: 3, chance: 99 }],
+    dropExperience: 50,
+  });
+  enemy.init();
 
-const ec = new EntityController(enemy, controls);
-enemy.placeEntity(11, 10); // Place an enemy nearby
-ec.init();
+  const controls = [
+    {
+      type: "basic",
+      actionType: "attackEnemy",
+      actionValue: "",
+      condition: "ifTargetLvl",
+      conditionValue: "isLowerThan",
+      conditionComparisonValue: "99",
+    },
+    {
+      type: "pathing",
+      actionType: "goToPosition",
+      actionValue: `${x-1} ${y}`,
+      condition: "",
+      conditionValue: "",
+      conditionComparisonValue: "",
+    },
+    {
+      type: "pathing",
+      actionType: "goToPosition",
+      actionValue: `${x+5} ${y+2}`,
+      condition: "",
+      conditionValue: "",
+      conditionComparisonValue: "",
+    },
+  ];
+
+  const ec = new EntityController(enemy, controls);
+  ec.controlsEnabled = true;
+  ec.autoDefendEnabled = true;
+  enemy.placeEntity(x, y); // Place an enemy nearby
+  ec.init();
+}
 
 function createPlayer(name, kind, socket, x, y) {
   const entityId = getRandomInt(0, 1000000);
@@ -146,6 +135,7 @@ function createPlayer(name, kind, socket, x, y) {
 }
 
 module.exports = {
-  enemy: enemy,
+  enemy: mob1,
   createPlayer,
+  createMob
 };

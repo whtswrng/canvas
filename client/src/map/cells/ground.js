@@ -12,6 +12,7 @@ export const Ground = ({ cell, children, ...rest }) => {
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}
+      title={cell.x + " " + cell.y}
     >
       {children}
     </div>

@@ -208,7 +208,7 @@ class Entity {
 
   initRegenInterval() {
     this.regenInterval = setInterval(() => {
-      if (this.state === STATE.IDLE) this.regenerate();
+      if ([STATE.IDLE, STATE.MOVING].includes(this.state)) this.regenerate();
     }, REGEN_INTERVAL);
   }
 
@@ -392,6 +392,10 @@ class Entity {
     });
   }
 
+  emitError(message) {
+    this.connection.emitError(message);
+  }
+
   async gather(x, y) {
     const handleAttack = () => {
       clearInterval(this.harvestingInterval);
@@ -451,6 +455,7 @@ class Entity {
   }
 
   changeState(state) {
+    console.log("calling change state", state);
     if (this.state === STATE.INTERACTING) {
       this.interactableObject?.stopInteracting?.(this);
       this.interactableObject = null;
@@ -500,7 +505,6 @@ class Entity {
     this.target = enemy;
     this.changeState(STATE.ATTACKING);
     this.connection.attackEnemy(enemy);
-    console.log("target: ", enemy.name);
     enemy.attackInitiated(this);
 
     handleAttack();
@@ -639,6 +643,27 @@ class Entity {
     return closestTarget;
   }
 
+  getClosestInteractable(range = 6) {
+    const playerMap = this.map.getEntityMap(this, range);
+    let closestTarget = null;
+    let closestDistance = Infinity;
+
+    // Iterate through the player's map
+    for (let y = 0; y < playerMap.length; y++) {
+      for (let x = 0; x < playerMap[y].length; x++) {
+        const cell = playerMap[y][x];
+        if (cell.interactable) {
+          const distance = this.calculateDistance(this.x, this.y, cell.x, cell.y);
+          if (distance < closestDistance) {
+            closestDistance = distance;
+            closestTarget = cell.interactable;
+          }
+        }
+      }
+    }
+    return closestTarget;
+  }
+
   findNearbyEntityById(id) {
     for (const e of this.getNearbyEntities()) {
       if (e.id === id) return e;
@@ -764,11 +789,12 @@ class Entity {
     if (this.hp == 0) return;
     if (this.movingTimeout) clearTimeout(this.movingTimeout);
     if (!this.targetLocation) return finish();
-    if (this.calculateDistance(this.x, this.y, this.targetLocation[0], this.targetLocation[1]) < 1) return finish();
 
     this.moving = true;
 
     if (this.state === STATE.IDLE) this.changeState(STATE.MOVING);
+
+    if (this.calculateDistance(this.x, this.y, this.targetLocation[0], this.targetLocation[1]) < 1) return finish();
 
     this.movingTimeout = setTimeout(() => {
       this.movingIsBlocked = false;

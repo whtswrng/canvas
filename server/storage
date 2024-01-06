@@ -1,0 +1,109 @@
+[
+  {
+    "name": "Store items",
+    "controls": [
+      {
+        "type": "pathing",
+        "actionType": "goToPosition",
+        "actionValue": "3 5",
+        "condition": "",
+        "conditionValue": "",
+        "conditionComparisonValue": ""
+      },
+      {
+        "type": "basic",
+        "actionType": "getItem",
+        "actionValue": "Common defense potion",
+        "condition": "ifMyPosition",
+        "conditionValue": "isEqual",
+        "conditionComparisonValue": "3 5"
+      },
+      {
+        "type": "basic",
+        "actionType": "storeItem",
+        "actionValue": "*",
+        "condition": "ifMyPosition",
+        "conditionValue": "isEqual",
+        "conditionComparisonValue": "7 5"
+      },
+      {
+        "type": "pathing",
+        "actionType": "goToPosition",
+        "actionValue": "8 5",
+        "condition": "",
+        "conditionValue": "",
+        "conditionComparisonValue": ""
+      },
+      {
+        "type": "transition",
+        "actionType": "transitionTo",
+        "actionValue": "Attack",
+        "condition": "ifMana",
+        "conditionValue": "isHigherThan",
+        "conditionComparisonValue": "180"
+      }
+    ]
+  },
+  {
+    "name": "Attack",
+    "controls": [
+      {
+        "type": "pathing",
+        "actionType": "goToPosition",
+        "actionValue": "8 10",
+        "condition": "",
+        "conditionValue": "",
+        "conditionComparisonValue": ""
+      },
+      {
+        "type": "pathing",
+        "actionType": "goToPosition",
+        "actionValue": "11 11",
+        "condition": "",
+        "conditionValue": "",
+        "conditionComparisonValue": ""
+      }
+    ]
+  },
+  {
+    "name": null,
+    "controls": []
+  },
+  {
+    "name": "Get items",
+    "controls": [
+      {
+        "type": "pathing",
+        "actionType": "goToPosition",
+        "actionValue": "7 5",
+        "condition": "",
+        "conditionValue": "",
+        "conditionComparisonValue": ""
+      },
+      {
+        "type": "pathing",
+        "actionType": "goToPosition",
+        "actionValue": "7 7",
+        "condition": "",
+        "conditionValue": "",
+        "conditionComparisonValue": ""
+      },
+      {
+        "type": "basic",
+        "actionType": "getItem",
+        "actionValue": "Oak Log",
+        "condition": "ifMyPosition",
+        "conditionValue": "isEqual",
+        "conditionComparisonValue": "7 5"
+      },
+      {
+        "type": "transition",
+        "actionType": "transitionTo",
+        "actionValue": "Attack",
+        "condition": "ifItemInInventory",
+        "conditionValue": "isHigherThan",
+        "conditionComparisonValue": "11 Oak Log"
+      }
+    ]
+  }
+]

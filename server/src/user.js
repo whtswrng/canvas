@@ -3,15 +3,35 @@ const { Entity } = require("./entity/entity");
 const { getRandomInt } = require("./utils");
 const { enemy, createPlayer } = require("./mocks");
 const { EntityController: EntityControl } = require("./entity/entity-controller");
+const fs = require("fs");
 
 let controlPanelInMemory = [];
+
+// Load JSON from file
+try {
+  const data = fs.readFileSync("./storage", "utf8");
+  controlPanelInMemory = JSON.parse(data);
+  console.log("JSON file loaded successfully.");
+} catch (err) {
+  console.error("Error loading JSON file:", err.message);
+}
+
+// Function to save JSON to file
+function saveToJsonFile(data) {
+  try {
+    const jsonData = JSON.stringify(data, null, 2); // The third argument (2) specifies the number of spaces to use for indentation.
+    fs.writeFileSync("./storage", jsonData, "utf8");
+    console.log("JSON data saved to file successfully.");
+  } catch (err) {
+    console.error("Error saving JSON data to file:", err.message);
+  }
+}
 
 class User {
   constructor(socket, playersWithControls) {
     this.socket = socket;
     this.playersWithControls = playersWithControls;
     this.controlPanel = [...controlPanelInMemory];
-    this.currentControls = null;
 
     for (const p of playersWithControls) {
       p.player.user = this;
@@ -41,6 +61,22 @@ class User {
       }
     }
     controlPanelInMemory = this.controlPanel;
+    saveToJsonFile(this.controlPanel);
+    this.emitControlPanel();
+  }
+
+  renameControlPanel(oldName, newName) {
+    if (this.controlPanel) {
+      const panel = this.controlPanel.find((panel) => panel.name === oldName);
+      if (panel) {
+        panel.name = newName;
+        console.log(`Control panel '${oldName}' was renamed successfully.`);
+      } else {
+        console.error(`Control panel '${name}' not found.`);
+      }
+    }
+    controlPanelInMemory = this.controlPanel;
+    saveToJsonFile(this.controlPanel);
     this.emitControlPanel();
   }
 
@@ -56,7 +92,12 @@ class User {
     }
     controlPanelInMemory = this.controlPanel;
 
+    saveToJsonFile(this.controlPanel);
     this.emitControlPanel();
+  }
+
+  transitionTo(playerId, panelName) {
+    this.setPlayerControls(playerId, panelName);
   }
 
   emitControlPanel() {
@@ -87,13 +128,13 @@ class User {
     }
   }
 
-  updatePlayerControls(playerId, panelName) {
+  setPlayerControls(playerId, panelName) {
     const p = this.playersWithControls.find(({ player }) => player.id === playerId);
     if (!p) return;
 
     const controls = this.controlPanel.find((p) => p.name === panelName)?.controls;
     if (controls) {
-      console.log('setting controls!!!!!!!!1________', controls)
+      console.log("setting controls!!!!!!!!1________", controls);
       p.control.setCurrentControls(panelName, controls);
       p.control.refreshQuickControls();
     }
@@ -106,7 +147,7 @@ class User {
 
       console.log("SET CONTROLS STATE", state, name);
       p.control.controlsEnabled = !!state;
-      this.updatePlayerControls(playerId, name);
+      this.setPlayerControls(playerId, name);
     });
 
     this.socket.on("SET_AUTO_DEFEND_STATE", ({ playerId, state = true }) => {
@@ -124,10 +165,9 @@ class User {
     });
 
     this.socket.on("UPDATE_CONTROLS", ({ playerId, controls, name = "foo" }) => {
-      console.log('==============')
+      console.log("==============");
       console.log(controls, name);
       this.updateControlPanel(name, controls);
-      this.updatePlayerControls(playerId, name);
     });
 
     this.socket.on("USE_ITEM", ({ playerId, itemId }) => {
@@ -164,6 +204,14 @@ class User {
 
     this.socket.on("ADD_CONTROL_PANEL", (data, cb) => {
       this.addControlPanel(data.name, []);
+    });
+
+    this.socket.on("DELETE_CONTROL_PANEL", (data, cb) => {
+      this.deleteControlPanel(data.name);
+    });
+
+    this.socket.on("RENAME_CONTROL_PANEL", (data, cb) => {
+      this.renameControlPanel(data.old, data.new);
     });
 
     this.socket.on("HAND_OVER_ITEMS", (data) => {

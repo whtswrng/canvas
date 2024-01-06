@@ -77,6 +77,10 @@ class Connection {
     this.emit("ERROR_MESSAGE", { playerId: this.id, msg });
   }
 
+  emitInfo(msg) {
+    this.emit("INFO_MESSAGE", { playerId: this.id, msg });
+  }
+
   updateEffects(effects) {
     this.emit("PLAYER_EFFECTS", { playerId: this.id, effects });
   }
@@ -98,6 +102,10 @@ class Connection {
 
   attributesUpdated(attrs) {
     this.emit("ATTRIBUTES_UPDATED", { playerId: this.id, attrs });
+  }
+
+  emitActiveControlPanel(panelName) {
+    this.emit("ACTIVE_CONTROL_PANEL", { playerId: this.id, panelName });
   }
 
   changeState(state) {

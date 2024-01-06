@@ -35,6 +35,7 @@ class EntityController {
     this.controlPanel = controlPanel;
     this.basicActionsInterval = null;
     this.combatActionsInterval = null;
+    this.transitionInterval = null;
     this.nextPathIndex = 0;
     this.lastSpellIndex = -1;
     this.lastState = null;
@@ -45,6 +46,7 @@ class EntityController {
     this.controlsEnabled = false;
     this.autoDefendEnabled = false;
     this.pvpEnabled = false;
+    this.tempData = {};
   }
 
   disconnect() {
@@ -53,11 +55,10 @@ class EntityController {
   }
 
   refreshQuickControls() {
-    this.handleQuickControls()
+    this.handleQuickControls();
   }
 
   setCurrentControls(name, controls) {
-    console.log("setting controls", controls);
     this.currentControls = { name, controls };
     this.nextPathIndex = 0;
     this.lastSpellIndex = -1;
@@ -65,6 +66,7 @@ class EntityController {
     this.resetIntervals();
     this.handleQuickControls();
     this.handleControls(this.entity.state);
+    this.entity.connection.emitActiveControlPanel(name);
   }
 
   init() {
@@ -72,18 +74,38 @@ class EntityController {
     this.handleControls(this.entity.state);
     this.handleQuickControls();
     this.originalPosition = [this.entity.x, this.entity.y];
+    this.handleTransitions();
+  }
+
+  handleTransitions() {
+    if (this.transitionInterval !== null) return;
+    this.transitionInterval = setInterval(() => {
+      if ([STATE.GATHERING, STATE.ATTACKING].includes(this.entity.state)) return;
+      const controls = this.currentControls?.controls?.filter?.((c) => c.type === "transition");
+
+      for (const c of controls) {
+        const a = new ActionControl(c, this.entity);
+        if (a.isConditionMet()) {
+          a.execute();
+        }
+      }
+    }, 200);
   }
 
   handleQuickControls() {
     this.entity.autoDefend = this.autoDefendEnabled;
     this.enabled = this.controlsEnabled;
+    if (!this.enabled) {
+      this.entity.connection.emitActiveControlPanel("");
+    }
   }
 
   handleControls() {
+    const newState = this.entity.state;
     setTimeout(() => {
-      const newState = this.entity.state;
       if (this.lastState === newState || !this.enabled) return;
       this.lastState = newState;
+      this.tempData = {};
 
       console.log("newState", this.entity.name, newState, this.returningBackFromFight);
       if ([STATE.IDLE].includes(newState)) {
@@ -126,6 +148,7 @@ class EntityController {
 
     console.log("handle pathing", this.nextPathIndex);
     for (let i = this.nextPathIndex; i <= controls.length; i++) {
+      console.log("tick");
       const control = controls[i];
       const a = new ActionControl(control, this.entity);
       if (control) {
@@ -133,7 +156,10 @@ class EntityController {
 
         if (control.actionType === "goToPosition") {
           const [x, y] = control.actionValue?.trim()?.split(" ");
-          if (this.entity.x === parseInt(x) && this.entity.y === parseInt(y)) continue;
+          if (this.entity.x === parseInt(x) && this.entity.y === parseInt(y)) {
+            console.log("this is the problematic branch!");
+            continue;
+          }
           await a.execute();
           if (this.entity.calculateDistance(this.entity.x, this.entity.y, x, y) <= 1) {
             this.returningBackFromFight = false;
@@ -154,7 +180,7 @@ class EntityController {
       const controls = this.currentControls?.controls?.filter?.((c) => c.type === "basic");
 
       for (const c of controls) {
-        const a = new ActionControl(c, this.entity);
+        const a = new ActionControl(c, this.entity, this.tempData);
         if (a.isConditionMet()) {
           a.execute();
         }

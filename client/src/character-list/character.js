@@ -14,23 +14,21 @@ export const Character = ({ character: defaultChar }) => {
   const [state, setState] = useState(null);
 
   const playerId = defaultChar.playerId;
-  const { data: basicAttrsUpdated } = useListen(
-    "BASIC_ATTRIBUTES_UPDATED",
-    defaultChar.playerId
-  );
+  const { data: basicAttrsUpdated } = useListen("BASIC_ATTRIBUTES_UPDATED", defaultChar.playerId);
   const { data: _attrs } = useListen("ATTRIBUTES_UPDATED", playerId);
   const { data: interactionData } = useListen("INTERACTION_DATA", playerId);
   const { data: _stateData } = useListen("CHANGE_STATE", playerId);
   const { data: map } = useListen("MAP_UPDATED", playerId);
   const { data: enemyHit } = useListen("ENEMY_HIT", playerId);
+  const { data: activePanel } = useListen("ACTIVE_CONTROL_PANEL", playerId);
 
   useEffect(() => {}, [_stateData]);
 
   useEffect(() => {
-    if (interactionData) {
+    if (interactionData && !activePanel?.panelName) {
       setState("interacting");
     }
-  }, [interactionData]);
+  }, [interactionData, activePanel]);
 
   const playerState = _stateData?.state;
 
@@ -45,6 +43,7 @@ export const Character = ({ character: defaultChar }) => {
   const attrs = _attrs?.attrs || defaultChar.attrs;
 
   const currentTarget = getCurrentTarget();
+  const currentCell = getCurrentCell();
 
   const calculatePercentage = (current, total) => {
     return (current / total) * 100;
@@ -58,23 +57,28 @@ export const Character = ({ character: defaultChar }) => {
   };
 
   const close = () => {
-    setState('map');
-  }
+    setState("map");
+  };
 
   return (
     <div className="card character-container">
       <div>
         <div className="character-header">
           <div>
-            <h2>
-              {name} {attrs.level} {attrs.levelPercentage}{" "}
-            </h2>
-            <span style={{ color: getStateColor() }}>{playerState}</span>
+            <div>
+              <h2 style={{ display: "inline" }}>
+                ({attrs.level}) {name}
+              </h2>
+              <span>
+                {" "}
+                {currentCell?.x} {currentCell?.y}
+              </span>
+            </div>
+            <span style={{ color: getStateColor() }}>{playerState} </span>
+            {activePanel?.panelName && <span style={{ fontWeight: 300 }}>"{activePanel?.panelName}"</span>}
           </div>
           <div className="enemy-container">
-            {currentTarget && (
-              <Entity cell={{ occupiedBy: currentTarget }} tooltipOpen={true} />
-            )}
+            {currentTarget && <Entity cell={{ occupiedBy: currentTarget }} tooltipOpen={true} />}
           </div>
         </div>
         <div className="character-details">
@@ -83,25 +87,16 @@ export const Character = ({ character: defaultChar }) => {
               HP {hp}/{maxHp}
             </p>
             <div className="progress-bar">
-              <div
-                className="progress-bar-hp-fill"
-                style={{ width: `${calculatePercentage(hp, maxHp)}%` }}
-              />
+              <div className="progress-bar-hp-fill" style={{ width: `${calculatePercentage(hp, maxHp)}%` }} />
             </div>
             <p>
               Mana {mana}/{maxMana}
             </p>
             <div className="progress-bar">
-              <div
-                className="progress-bar-mana-fill"
-                style={{ width: `${calculatePercentage(mana, maxMana)}%` }}
-              />
+              <div className="progress-bar-mana-fill" style={{ width: `${calculatePercentage(mana, maxMana)}%` }} />
             </div>
             <div className="progress-bar" style={{ marginTop: 5, height: 10 }}>
-              <div
-                className="progress-bar-exp-fill"
-                style={{ width: `${attrs.levelPercentage}%` }}
-              />
+              <div className="progress-bar-exp-fill" style={{ width: `${attrs.levelPercentage}%` }} />
             </div>
           </div>
           <div className="attrs">
@@ -138,28 +133,30 @@ export const Character = ({ character: defaultChar }) => {
       )}
       {state === "panel" && <ControlPanel playerId={playerId} />}
       {state === "inventory" && <Inventory playerId={playerId} />}
-      {state === "interacting" && (
-        <Interaction playerId={playerId} data={interactionData} close={close} />
-      )}
+      {state === "interacting" && <Interaction playerId={playerId} data={interactionData} close={close} />}
     </div>
   );
 
-  function getCurrentTarget() {
-    const enemyId = enemyHit?.enemy?.id;
-    const enemy = findEntityInMap();
+  function getCurrentCell() {
+    const cell = findEntityInMap(playerId);
+    return cell;
+  }
 
-    return enemy;
-
-    function findEntityInMap() {
-      if (!map?.map) return;
-      for (const row of map?.map) {
-        for (const cell of row) {
-          if (cell.occupiedBy?.id === enemyId) {
-            return cell.occupiedBy;
-          }
+  function findEntityInMap(enemyId) {
+    if (!map?.map) return;
+    for (const row of map?.map) {
+      for (const cell of row) {
+        if (cell.occupiedBy?.id === enemyId) {
+          return cell;
         }
       }
     }
+  }
+
+  function getCurrentTarget() {
+    const enemyId = enemyHit?.enemy?.id;
+    const enemy = findEntityInMap(enemyId);
+    return enemy?.occupiedBy;
   }
 
   function getStateColor() {

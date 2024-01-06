@@ -25,8 +25,15 @@ function calculatePercentage(part, whole) {
   }
 }
 
+function parsePositionFromString(string) {
+  const [x, y] = string?.trim()?.split(" ");
+  return [parseInt(x), parseInt(y)]
+}
+
+
 module.exports = {
   getRandomInt,
   generateUniqueString,
   calculatePercentage,
+  parsePositionFromString
 };

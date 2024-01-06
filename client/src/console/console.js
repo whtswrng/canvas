@@ -32,13 +32,24 @@ const Console = () => {
     socket.on("ADD_ITEM", ({ playerId, playerName, item }) => {
       addLog({
         sentiment: 5,
-        msg: <span>Item {item.name} was added {item.amount}x to inventory.</span>,
+        msg: (
+          <span>
+            Item {item.name} was added {item.amount}x to inventory.
+          </span>
+        ),
       });
     });
 
     socket.on("ERROR_MESSAGE", ({ playerId, msg }) => {
       addLog({
         sentiment: 1,
+        msg,
+      });
+    });
+
+    socket.on("INFO_MESSAGE", ({ playerId, msg }) => {
+      addLog({
+        sentiment: 3,
         msg,
       });
     });
@@ -60,10 +71,7 @@ const Console = () => {
   }, [logs]); // Trigger the effect when new events arrive
 
   function addLog(messageObject) {
-    setLogs((logs) => [
-      ...logs,
-      { ...messageObject, timestamp: getTimestamp() },
-    ]);
+    setLogs((logs) => [...logs, { ...messageObject, timestamp: getTimestamp() }]);
   }
 
   const handleToggleScroll = () => {
@@ -73,13 +81,11 @@ const Console = () => {
   return (
     <div className="card">
       <h2>Console 2</h2>
-      <button onClick={handleToggleScroll}>
-        {autoScroll ? "Disable Follow Scroll" : "Enable Follow Scroll"}
-      </button>
+      <button onClick={handleToggleScroll}>{autoScroll ? "Disable Follow Scroll" : "Enable Follow Scroll"}</button>
       <div className="logs-container" ref={consoleRef}>
         {logs.map((l) => (
           <div className={"log sentiment-" + l.sentiment}>
-            <span style={{fontWeight: 200, marginRight: 5}}>[{l.timestamp}]</span> 
+            <span style={{ fontWeight: 200, marginRight: 5 }}>[{l.timestamp}]</span>
             <span>{l.msg}</span>
           </div>
         ))}

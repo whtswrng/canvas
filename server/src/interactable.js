@@ -4,16 +4,7 @@ const { createItem } = require("./item");
 const { generateUniqueString } = require("./utils");
 
 class Interactable {
-  constructor({
-    name,
-    x,
-    y,
-    description,
-    offsetX = 1,
-    offsetY = 1,
-    map,
-    interaction
-  }) {
+  constructor({ name, x, y, description, offsetX = 1, offsetY = 1, map, interaction }) {
     this.name = name;
     (this.x = x), (this.y = y);
     this.map = map;
@@ -31,22 +22,32 @@ class Interactable {
   }
 
   interact(entity) {
-    const reqId = generateUniqueString()
-    entity.connection.sendInteractionData({...this.interaction.generateData(entity), reqId});
+    const reqId = generateUniqueString();
+    const result = { ...this.interaction.generateData(entity), reqId };
+    entity.connection.sendInteractionData(result);
     this.activeMap = {
       [entity.id]: reqId,
     };
 
     entity.connection.on("INTERACT", (data) => {
-      const requestId = data.reqId;
-      const playerId = data.playerId;
-      const _entity = entity.user.getPlayerById(playerId);
-      const id = this.activeMap[entity.id];
-      if (id !== requestId) return;
-
-      this.interaction.handle(_entity, data);
+      this.handleSocketInteraction(entity, data);
     });
 
+    return result;
+  }
+
+  handleSocketInteraction(entity, data) {
+    const requestId = data.reqId;
+    const playerId = data.playerId;
+    const _entity = entity.user.getPlayerById(playerId);
+    const id = this.activeMap[entity.id];
+    if (id !== requestId) return;
+
+    this.handleInteraction(_entity, data);
+  }
+
+  handleInteraction(entity, data) {
+    this.interaction.handle(entity, data);
   }
 
   stopInteracting(entity) {

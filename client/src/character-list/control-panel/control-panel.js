@@ -22,6 +22,11 @@ export const ControlPanel = memo(({ playerId }) => {
     socket.emit("ADD_CONTROL_PANEL", { name });
   }
 
+  function renameControlPanel() {
+    const name = window.prompt("New name", currentPanelName);
+    socket.emit("RENAME_CONTROL_PANEL", { old: currentPanelName, new: name });
+  }
+
   function deleteControlPanel() {
     socket.emit("DELETE_CONTROL_PANEL", { name: currentPanelName });
   }
@@ -64,7 +69,8 @@ export const ControlPanel = memo(({ playerId }) => {
           <button style={{ marginLeft: 5, marginRight: 5 }} onClick={addNewControlPanel}>
             New
           </button>
-          <button onClick={deleteControlPanel}>Remove current</button>
+          <button onClick={renameControlPanel}>Rename</button>
+          <button onClick={deleteControlPanel}>Delete</button>
         </div>
       )}
 
@@ -97,6 +103,7 @@ export const ControlPanel = memo(({ playerId }) => {
           { value: "ifTargetHp", label: "If target hp is" },
           { value: "ifTargetLvl", label: "If target hp is" },
           { value: "ifTargetName", label: "If target name is" },
+          { value: "ifMyPosition", label: "If my position is" },
         ]}
         conditionValueOptions={[
           { value: "isEqual", label: "Equal" },
@@ -122,6 +129,7 @@ export const ControlPanel = memo(({ playerId }) => {
           { value: "ifTargetHp", label: "If target hp is" },
           { value: "ifTargetLvl", label: "If target lvl is" },
           { value: "ifTargetName", label: "If target name is" },
+          { value: "ifMyPosition", label: "If my position is" },
         ]}
         conditionValueOptions={[
           { value: "isEqual", label: "Equal" },
@@ -132,9 +140,35 @@ export const ControlPanel = memo(({ playerId }) => {
           { value: "attackEnemy", label: "Attack enemy" },
           { value: "attackFriendlyTarget", label: "Attack friendly target" },
           { value: "gatherObject", label: "Gather object" },
+          { value: "getItem", label: "Get item" },
+          { value: "storeItem", label: "Store item" },
           { value: "playAlarm", label: "Play alarm" },
         ]}
         valueOption={true}
+      />
+      <Control
+        playerId={playerId}
+        title="Transition to panel"
+        list={getControls("transition")}
+        createControl={createControl}
+        removeAction={removeAction}
+        type="transition"
+        conditionOptions={[
+          { value: "ifHp", label: "If my hp is" },
+          { value: "ifMana", label: "If my mana is" },
+          { value: "ifTargetHp", label: "If target hp is" },
+          { value: "ifTargetLvl", label: "If target lvl is" },
+          { value: "ifTargetName", label: "If target name is" },
+          { value: "ifMyPosition", label: "If my position is" },
+          { value: "ifItemInInventory", label: "If item in my inventory" },
+        ]}
+        conditionValueOptions={[
+          { value: "isEqual", label: "Equal" },
+          { value: "isLowerThan", label: "Lower" },
+          { value: "isHigherThan", label: "Higher" },
+        ]}
+        actionTypes={[{ value: "transitionTo", label: "Transition to" }]}
+        valueOptions={data?.map((p) => ({ value: p.name, label: p.name }))}
       />
     </div>
   );

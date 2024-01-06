@@ -16,12 +16,9 @@ class ShopInteraction {
   generateData(entity) {
     this.data = {
       options: [
-        createItemOption(entity, createItem("Varnish", 1), [
-          createItem("Silver", 10),
-        ]),
-        createItemOption(entity, createItem("Varnish", 5), [
-          createItem("Oak Log", 10),
-          createItem("Varnish", 10),
+        createItemOption(entity, createItem("Common defense potion", 1), [
+          createItem("Oak Log", 1),
+          createItem("Varnish", 1),
         ]),
       ],
       description:
@@ -42,7 +39,10 @@ class ShopInteraction {
     if (entity.hasItems(requirementItems)) {
       entity.removeItems(requirementItems);
       entity.addItem(item);
+      return;
     }
+
+    entity.emitError(`You cannot buy item ${item.name}!`);
   }
 }
 
