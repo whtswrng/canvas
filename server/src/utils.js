@@ -6,8 +6,7 @@ function getRandomInt(min, max) {
 
 function generateUniqueString(length = 13) {
   let result = "";
-  const characters =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   const charactersLength = characters.length;
   let counter = 0;
   while (counter < length) {
@@ -27,13 +26,17 @@ function calculatePercentage(part, whole) {
 
 function parsePositionFromString(string) {
   const [x, y] = string?.trim()?.split(" ");
-  return [parseInt(x), parseInt(y)]
+  return [parseInt(x), parseInt(y)];
 }
 
+function isItemEnchantable(item) {
+  return ["hands", "weapon", "armor", "head", "legs", "boots"].includes(item.type);
+}
 
 module.exports = {
+  isItemEnchantable,
   getRandomInt,
   generateUniqueString,
   calculatePercentage,
-  parsePositionFromString
+  parsePositionFromString,
 };

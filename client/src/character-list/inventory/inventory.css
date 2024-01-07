@@ -22,6 +22,12 @@
   cursor: pointer;
 }
 
+.inventory-item.enchantable {
+  opacity: 0.4;
+  border: 1px solid blue;
+  cursor: pointer;
+}
+
 .inventory-item.selected {
   opacity: 1;
 }

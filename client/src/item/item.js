@@ -21,13 +21,14 @@ export const Item = ({ item }) => {
         {item.name} ({item.amount}x)
       </div>
       <Tooltip anchorSelect={"#item-" + item.id} place="top">
-        <div style={{maxWidth: 100, wordBreak: 'break-word'}}>
+        <div style={{ maxWidth: 100, wordBreak: "break-word" }}>
           <div>
             <span style={{ fontWeight: 800 }}>
               {item.level} {item.name}
             </span>
+            {item.enchant && <span style={{ color: "#00FFFF", fontWeight: 800 }}> +{item.enchant}</span>}
           </div>
-          <div style={{fontWeight: 200}}>{item.type}</div>
+          <div style={{ fontWeight: 200 }}>{item.type}</div>
           {item.attrs && (
             <div>
               <span>Attributes</span>

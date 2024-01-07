@@ -1,11 +1,11 @@
 const { createItem } = require("../item");
 
-function createItemOption(entity, item, alchemyLvl, requirementItems) {
+function createItemOption(entity, item, secondaryClass, lvl, requirementItems) {
   const secondaryClassReq = {
     type: "secondaryClass",
-    name: "alchemy",
-    level: alchemyLvl,
-    fulfilled: entity?.secondaryClass?.level >= alchemyLvl,
+    name: secondaryClass,
+    level: lvl,
+    fulfilled: entity?.secondaryClass?.level >= lvl,
   };
 
   return {
@@ -22,20 +22,8 @@ function createItemOption(entity, item, alchemyLvl, requirementItems) {
   };
 }
 
-class AlchemyInteraction {
-  generateData(entity) {
-    this.data = {
-      options: [
-        createItemOption(entity, createItem("Common defense potion", 1), 0, [createItem("Varnish", 1)]),
-        createItemOption(entity, createItem("Common power potion", 1), 5, [createItem("Varnish", 1)]),
-      ],
-      description: "Hello apprentice! I see you've come to craft a new potions!",
-      action: "pickFromOptions",
-      title: "Alchemy trainer",
-      actionButton: "Create",
-    };
-    return this.data;
-  }
+class SecondaryClassInteraction {
+  generateData(entity) { }
 
   handle(entity, response) {
     const selectedOption = this.data.options[response.data?.optionIndex];
@@ -43,7 +31,7 @@ class AlchemyInteraction {
     const requirementItems = selectedOption.requirements.filter((r) => r.type === "item").map((r) => r.item);
     const classRequirement = selectedOption.requirements.find((r) => r.type === "secondaryClass");
 
-    console.log('requirement', classRequirement)
+    console.log("requirement", classRequirement);
     if (classRequirement) {
       if (classRequirement.name !== entity.secondaryClass.name) {
         return entity.emitError(`You need appropriate secondary class!`);
@@ -70,6 +58,25 @@ class AlchemyInteraction {
   }
 }
 
+class AlchemyInteraction extends SecondaryClassInteraction {
+  generateData(entity) {
+    this.data = {
+      options: [
+        createItemOption(entity, createItem("Common defense potion", 1), "alchemy", 0, [createItem("Varnish", 1)]),
+        createItemOption(entity, createItem("Common power potion", 1), "alchemy", 5, [createItem("Varnish", 1)]),
+      ],
+      description: "Hello apprentice! I see you've come to craft a new potions!",
+      action: "pickFromOptions",
+      title: "Alchemy trainer",
+      actionButton: "Create",
+    };
+    return this.data;
+  }
+
+}
+
 module.exports = {
+  createItemOption,
   AlchemyInteraction,
+  SecondaryClassInteraction
 };

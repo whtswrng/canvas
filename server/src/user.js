@@ -175,6 +175,11 @@ class User {
       if (p) p.player.useItem(itemId);
     });
 
+    this.socket.on("ENCHANT_ITEM", ({ playerId, enchantItem, item }) => {
+      const p = this.playersWithControls.find(({ player }) => player.id === playerId);
+      if (p) p.player.enchantItem(enchantItem, item);
+    });
+
     this.socket.on("EQUIP_ITEM", ({ playerId, itemId }) => {
       const p = this.playersWithControls.find(({ player }) => player.id === playerId);
       if (p) p.player.equipById(itemId);

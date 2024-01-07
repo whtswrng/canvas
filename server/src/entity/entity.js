@@ -1,7 +1,7 @@
 const { map } = require("../globals");
 const { Interactable } = require("../interactable");
 const { createItem } = require("../item");
-const { getRandomInt, generateUniqueString, calculatePercentage } = require("../utils");
+const { getRandomInt, generateUniqueString, calculatePercentage, isItemEnchantable } = require("../utils");
 
 const MAP_REFRESH_RATE_IN_MS = 120;
 const REGEN_INTERVAL = 2000;
@@ -229,6 +229,21 @@ class Entity {
     }
   }
 
+  enchantItem(enchant, itemId) {
+    const e = this.inventory.getItemById(enchant.id);
+    const item = this.inventory.getItemById(itemId);
+    if (!item || !e || !isItemEnchantable(item)) return;
+
+    if (this.inventory.enchantItem(e, item)) {
+      this.connection.emitSuccess({ type: "ENCHANT_SUCCEED", msg: `The enchanting of a ${item.name} has succeed.` });
+    } else {
+      this.connection.emitError({ type: "ENCHANT_FAILED", msg: `The enchanting of a ${item.name} has failed.` });
+    }
+
+    this.removeItems([{ name: e.name, amount: 1 }]);
+    this.emitAttributes();
+  }
+
   useItemByName(itemName) {
     const item = this.inventory.getItemByName(itemName);
     this.useItem(item.id);
@@ -311,6 +326,7 @@ class Entity {
         }
       }
     }
+
     // effects
     return attrs;
   }
@@ -358,6 +374,7 @@ class Entity {
 
   equipById(itemId) {
     const i = this.inventory.getItemById(itemId);
+    console.log('equiping---------------------', i)
     if (i) this.equip(i);
   }
 

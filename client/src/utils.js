@@ -20,3 +20,7 @@ export function generateUniqueString(length = 13) {
   }
   return result;
 }
+
+export function isItemEnchantable(item) {
+  return ["hands", "weapon", "armor", "head", "legs", "boots"].includes(item.type);
+}

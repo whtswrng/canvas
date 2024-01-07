@@ -3,13 +3,14 @@ import "./inventory.css";
 import { useFetch, useListen } from "../../listen";
 import { Item } from "../../item/item";
 import { socket } from "../../App";
-import { capitalizeFirstLetter } from "../../utils";
+import { capitalizeFirstLetter, isItemEnchantable } from "../../utils";
 
 export const Inventory = ({ playerId }) => {
   const { data, loading } = useListen("INVENTORY_UPDATED", playerId, true);
   const { data: players } = useFetch("FETCH_PLAYERS");
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [selectedItems, setSelectedItems] = useState([]);
+  const [clickedEnchant, setClickedEnchant] = useState(null);
 
   const equipedItems = data?.inventory?.filter((i) => i.equiped);
 
@@ -34,9 +35,19 @@ export const Inventory = ({ playerId }) => {
     }
     if (!item) return;
     if (item.usable) {
-      socket.emit("USE_ITEM", { playerId, itemId: item.id });
+      if (item.type === "enchant") {
+        setClickedEnchant((prev) => (prev ? null : item));
+      } else {
+        socket.emit("USE_ITEM", { playerId, itemId: item.id });
+      }
     } else {
-      socket.emit("EQUIP_ITEM", { playerId, itemId: item.id });
+      if (clickedEnchant) {
+        socket.emit("ENCHANT_ITEM", { playerId, enchantItem: clickedEnchant, item: item.id });
+        setClickedEnchant(null);
+      } else {
+        console.log('equiping', item)
+        socket.emit("EQUIP_ITEM", { playerId, itemId: item.id });
+      }
     }
   };
 
@@ -64,7 +75,8 @@ export const Inventory = ({ playerId }) => {
               className={
                 "inventory-item " +
                 (item.usable ? "usable " : " ") +
-                (selectedPlayer ? "selectable " : " ") +
+                (selectedPlayer || clickedEnchant ? "selectable " : " ") +
+                (clickedEnchant && isItemEnchantable(item) ? "enchantable " : " ") +
                 (selectedItems.includes(item.id) ? "selected" : "")
               }
               onClick={() => handleItemClick(item)}
@@ -75,10 +87,7 @@ export const Inventory = ({ playerId }) => {
       </div>
       <div className="hand-over-items">
         <h3>Hand over selected items</h3>
-        <select
-          value={selectedPlayer?.id || "none"}
-          onChange={handleSelectChange}
-        >
+        <select value={selectedPlayer?.id || "none"} onChange={handleSelectChange}>
           <option key={"none"} value={""}>
             None
           </option>

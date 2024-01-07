@@ -17,6 +17,14 @@ const items = {
     description: "Ancient material from the sun",
     type: "material",
   },
+  "Common enchant scroll": {
+    name: "Common enchant scroll",
+    rarity: "common",
+    maxStack: 5,
+    description: "Just a basic enchant scroll with a 65% chance of success",
+    type: "enchant",
+    usable: true
+  },
   "Common defense potion": {
     name: "Common defense potion",
     rarity: "common",

@@ -77,12 +77,16 @@ class Connection {
     });
   }
 
-  emitError(msg) {
-    this.emit("ERROR_MESSAGE", { playerId: this.id, msg });
+  emitError(data) {
+    this.emit("ERROR_MESSAGE", { playerId: this.id, data });
   }
 
-  emitInfo(msg) {
-    this.emit("INFO_MESSAGE", { playerId: this.id, msg });
+  emitInfo(data) {
+    this.emit("INFO_MESSAGE", { playerId: this.id, data });
+  }
+
+  emitSuccess(data) {
+    this.emit("INFO_MESSAGE", { playerId: this.id, data });
   }
 
   updateEffects(effects) {

@@ -1,4 +1,5 @@
 const { createItem } = require("../item");
+const { getRandomInt } = require("../utils");
 
 class Inventory {
   constructor(connection) {
@@ -26,6 +27,24 @@ class Inventory {
 
     this.connection.addItem({ name, amount });
     this.connection.updateInventory(this.getItems());
+  }
+
+  enchantItem(enchant, item) {
+    if(!item.enchant) item.enchant = 0;
+    let chance = 55;
+    if(enchant.type === 'rare') chance = 65;
+    if(enchant.type === 'epic') chance = 75;
+
+    if(getRandomInt(1, 100) <= chance) {
+      item.enchant += 1;
+      for (const attr in item.attrs) {
+        item.attrs[attr] = Math.round(item.attrs[attr] * 1.05);
+      }
+      return true;
+    } else {
+      this.removeItemsById([item.id]);
+      return false;
+    }
   }
 
   hasItems(items) {

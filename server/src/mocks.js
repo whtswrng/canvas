@@ -12,9 +12,11 @@ const { ShopInteraction } = require("./interactions/shop-interaction");
 const { Inventory } = require("./entity/inventory");
 const { StorageInteraction } = require("./interactions/storage-interaction");
 const { AlchemyInteraction } = require("./interactions/alchemy-interaction");
+const { EnchantingInteraction } = require("./interactions/enchanting-interaction");
 
 const shopInteraction = new ShopInteraction();
 const alchemyInteraction = new AlchemyInteraction();
+const enchantingInteraction = new EnchantingInteraction();
 const storageInteraction = new StorageInteraction();
 
 const shop = new Interactable({
@@ -46,6 +48,16 @@ const alchemy = new Interactable({
   interaction: alchemyInteraction,
 });
 alchemy.place();
+
+const enchanting = new Interactable({
+  name: "Enchanting Fortress",
+  description: "You can craft enchants and gems here.",
+  x: 4,
+  y: 8,
+  map,
+  interaction: enchantingInteraction,
+});
+enchanting.place();
 
 const tree = new Material({
   type: "tree",

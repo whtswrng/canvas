@@ -42,17 +42,24 @@ const Console = memo(() => {
       });
     });
 
-    socket.on("ERROR_MESSAGE", ({ playerId, msg }) => {
+    socket.on("ERROR_MESSAGE", ({ playerId, data }) => {
       addLog({
         sentiment: 1,
-        msg,
+        msg: data?.msg ?? data,
       });
     });
 
-    socket.on("INFO_MESSAGE", ({ playerId, msg }) => {
+    socket.on("INFO_MESSAGE", ({ playerId, data }) => {
       addLog({
         sentiment: 3,
-        msg,
+        msg: data?.msg ?? data,
+      });
+    });
+
+    socket.on("SUCCESS_MESSAGE", ({ playerId, data }) => {
+      addLog({
+        sentiment: 4,
+        msg: data?.msg ?? data,
       });
     });
 
