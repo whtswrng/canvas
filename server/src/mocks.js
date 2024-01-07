@@ -98,6 +98,7 @@ function createMob(name, x, y) {
     experience: 1,
     respawnInS: 4,
     drops: [{ name: "Varnish", min: 1, max: 3, chance: 99 }],
+    attrs: { power: 90 },
     dropExperience: 50,
   });
   enemy.init();
@@ -133,7 +134,7 @@ function createMob(name, x, y) {
   ec.controlsEnabled = true;
   ec.autoDefendEnabled = true;
   enemy.placeEntity(x, y); // Place an enemy nearby
-  // ec.init();
+  ec.init();
 }
 
 function createPlayer(name, kind, socket, x, y) {
@@ -141,13 +142,15 @@ function createPlayer(name, kind, socket, x, y) {
   const connection = new Connection(entityId, socket, map);
   const inventory = new Inventory(connection);
 
-  inventory.addItem({ name: "Hands of Aros" });
+  inventory.addItem({ name: "Hands of Aros", enchant: 1, attrs: { hp: 20 } });
   inventory.addItem({ name: "Simple axe" });
   inventory.addItem({ name: "Oak Log", amount: 10 });
   inventory.addItem({ name: "Oak Log", amount: 10 });
   inventory.addItem({ name: "Varnish", amount: 4 });
   inventory.addItem({ name: "Oak Log", amount: 10 });
   inventory.addItem({ name: "Common defense potion", amount: 4 });
+  inventory.addItem({ name: "Common hp potion", amount: 4 });
+  inventory.addItem({ name: "Common mana potion", amount: 4 });
 
   const p = new Entity({
     id: entityId,

@@ -146,9 +146,7 @@ class EntityController {
   async handlePathingActions() {
     const controls = this.currentControls?.controls?.filter?.((c) => c.type === "pathing");
 
-    console.log("handle pathing", this.nextPathIndex);
     for (let i = this.nextPathIndex; i <= controls.length; i++) {
-      console.log("tick");
       const control = controls[i];
       const a = new ActionControl(control, this.entity);
       if (control) {
@@ -156,10 +154,7 @@ class EntityController {
 
         if (control.actionType === "goToPosition") {
           const [x, y] = control.actionValue?.trim()?.split(" ");
-          if (this.entity.x === parseInt(x) && this.entity.y === parseInt(y)) {
-            console.log("this is the problematic branch!");
-            continue;
-          }
+          if (this.entity.x === parseInt(x) && this.entity.y === parseInt(y)) continue;
           await a.execute();
           if (this.entity.calculateDistance(this.entity.x, this.entity.y, x, y) <= 1) {
             this.returningBackFromFight = false;

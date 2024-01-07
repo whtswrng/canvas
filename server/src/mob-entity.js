@@ -24,14 +24,7 @@ class MobEntity extends Entity {
     drops = [],
     map,
     dropExperience,
-    attrs = {
-      hp: 10,
-      mana: 0,
-      defense: 10,
-      power: 10,
-      hpRegeneration: 20,
-      manaRegeneration: 50,
-    },
+    attrs = {},
   }) {
     super({
       id: generateUniqueString(),
@@ -46,8 +39,17 @@ class MobEntity extends Entity {
       attackRange: 1,
       attackSpeed: 1200,
     });
-    this.originalHp = attrs.hp;
-    this.originalMana = attrs.mana;
+    this.attrs = {
+      hp: 10,
+      mana: 0,
+      defense: 10,
+      power: 10,
+      hpRegeneration: 20,
+      manaRegeneration: 50,
+      ...attrs,
+    };
+    this.originalHp = this.attrs.hp;
+    this.originalMana = this.attrs.mana;
     this.guardInterval = null;
     this.respawnInS = respawnInS;
     this.originalX = -1;
@@ -55,7 +57,11 @@ class MobEntity extends Entity {
     this.drops = drops; // {type: 'Varnish', chance: 30, min: 4, max: 8}
     this.autoDefend = autoDefend;
     this.dropExperience = dropExperience;
-    this.baseAttrs = attrs;
+    this.baseAttrs = this.attrs;
+  }
+
+  gainExperience(exp) {
+    // no need
   }
 
   generateBaseAttrs() {
@@ -74,6 +80,10 @@ class MobEntity extends Entity {
     }
     this.respawn();
     return drops;
+  }
+
+  _respawn() {
+    // noop
   }
 
   respawn() {

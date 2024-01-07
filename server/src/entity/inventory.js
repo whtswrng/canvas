@@ -7,11 +7,14 @@ class Inventory {
     this.connection = connection;
   }
 
-  addItem({ name, amount = 1 }) {
+  addItem(_item) {
+    const { name, amount } = _item;
     const item = createItem(name, amount);
-    const existingItem = this.items.find(
-      (i) => i.name === item.name && i.amount < item.maxStack
-    );
+    if (_item.enchant) {
+      item.attrs = { ...item.attrs, ..._item.attrs };
+      item.enchant = _item.enchant;
+    }
+    const existingItem = this.items.find((i) => i.name === item.name && i.amount < item.maxStack);
 
     if (existingItem) {
       existingItem.amount += item.amount;
@@ -30,12 +33,12 @@ class Inventory {
   }
 
   enchantItem(enchant, item) {
-    if(!item.enchant) item.enchant = 0;
+    if (!item.enchant) item.enchant = 0;
     let chance = 55;
-    if(enchant.type === 'rare') chance = 65;
-    if(enchant.type === 'epic') chance = 75;
+    if (enchant.type === "rare") chance = 65;
+    if (enchant.type === "epic") chance = 75;
 
-    if(getRandomInt(1, 100) <= chance) {
+    if (getRandomInt(1, 100) <= chance) {
       item.enchant += 1;
       for (const attr in item.attrs) {
         item.attrs[attr] = Math.round(item.attrs[attr] * 1.05);

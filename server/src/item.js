@@ -1,5 +1,9 @@
 const { generateUniqueString } = require("./utils");
 
+
+// common magic powder (rare, epic)
+// 
+
 const items = {
   Silver: {
     name: "Silver",
@@ -28,7 +32,7 @@ const items = {
   "Common defense potion": {
     name: "Common defense potion",
     rarity: "common",
-    maxStack: 10,
+    maxStack: 20,
     description: "Just a basic potion",
     type: "potion",
     usable: true,
@@ -39,10 +43,34 @@ const items = {
       }
     }
   },
+  "Common hp potion": {
+    name: "Common hp potion",
+    rarity: "common",
+    maxStack: 20,
+    description: "Just a basic potion",
+    type: "potion",
+    usable: true,
+    effect: {
+      expireInMinutes: 0.5,
+      attrs: {}
+    }
+  },
+  "Common mana potion": {
+    name: "Common mana potion",
+    rarity: "common",
+    maxStack: 20,
+    description: "Just a basic potion",
+    type: "potion",
+    usable: true,
+    effect: {
+      expireInMinutes: 1,
+      attrs: {}
+    }
+  },
   "Common power potion": {
     name: "Common power potion",
     rarity: "common",
-    maxStack: 10,
+    maxStack: 20,
     description: "Just a basic potion",
     type: "potion",
     usable: true,
@@ -65,6 +93,7 @@ const items = {
     rarity: "common",
     maxStack: 1,
     equipable: true,
+    level: 3,
     description: "Just a basic wood",
     type: "hands",
     attrs: { hp: 10, mana: 10, power: 2, defense: 10 },

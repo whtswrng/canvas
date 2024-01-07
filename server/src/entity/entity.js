@@ -3,12 +3,14 @@ const { Interactable } = require("../interactable");
 const { createItem } = require("../item");
 const { getRandomInt, generateUniqueString, calculatePercentage, isItemEnchantable } = require("../utils");
 
-const MAP_REFRESH_RATE_IN_MS = 120;
+const MAP_REFRESH_RATE_IN_MS = 180;
 const REGEN_INTERVAL = 2000;
 const HEALING_SPELL_COOLDOWN = 500;
 const HEALING_SPELL_MANA_COST = 20;
 const MAGE_SPELL_MANA_COST = 5;
 const TANK_SPELL_MANA_COST = 0;
+
+const SPAWN_POINT = [20, 20];
 
 const STATE = {
   ATTACKING: "ATTACKING",
@@ -136,6 +138,7 @@ class Entity {
   }
 
   init() {
+    console.log('FUCKING CALLLLLLLLLLEEEEEEEEEEED');
     // base attrs
     this.baseAttrs = this.generateBaseAttrs();
 
@@ -226,7 +229,15 @@ class Entity {
 
     if (this.applyItemEffect(item)) {
       this.removeItems([{ name: item.name, amount: 1 }]);
+
+      if (item.name === "Common hp potion") {
+        this.increaseHp(80);
+      }
+      if (item.name === "Common mana potion") {
+        this.increaseMana(80);
+      }
     }
+    this.emitBasicAttrsUpdated();
   }
 
   enchantItem(enchant, itemId) {
@@ -261,19 +272,27 @@ class Entity {
     const hpRegen = Math.round(attrs.hpRegeneration / 4);
     const manaRegen = Math.round(attrs.manaRegeneration / 4);
 
-    this.hp += hpRegen;
+    this.increaseHp(hpRegen);
+    this.increaseMana(manaRegen);
     this.mana += manaRegen;
 
+    this.emitBasicAttrsUpdated();
+  }
+
+  increaseHp(amount) {
+    const attrs = this.getAttrs();
+    this.hp += amount;
     if (this.hp > attrs.hp) {
       this.hp = attrs.hp;
     }
+  }
 
+  increaseMana(amount) {
+    const attrs = this.getAttrs();
+    this.mana += amount;
     if (this.mana > attrs.mana) {
       this.mana = attrs.mana;
     }
-
-    // Update the client or perform any other necessary actions
-    this.emitBasicAttrsUpdated();
   }
 
   startEmitMap() {
@@ -334,6 +353,7 @@ class Entity {
   equip(item) {
     if (!item?.equipable) return;
     if (this.state !== STATE.IDLE) return;
+    if (item.level > this.getLevel()) return this.emitError(`You cannot equip item with higher level than your own!`);
 
     const previouslyEquiped = item.equiped;
 
@@ -374,7 +394,7 @@ class Entity {
 
   equipById(itemId) {
     const i = this.inventory.getItemById(itemId);
-    console.log('equiping---------------------', i)
+    console.log("equiping---------------------", i);
     if (i) this.equip(i);
   }
 
@@ -600,7 +620,7 @@ class Entity {
     this.emitBasicAttrsUpdated();
 
     // Apply defense reduction
-    damage -= enemy.getAttrs().defense;
+    damage -= enemy.getAttrs().defense ?? 0;
     // Ensure damage is non-negative
     damage = Math.max(3, damage);
 
@@ -895,7 +915,30 @@ class Entity {
     this.connection.die();
     this.changeState(STATE.DEATH);
     clearInterval(this.regenInterval);
+    setTimeout(() => {
+      this._respawn();
+    }, 2000);
     return drops;
+  }
+
+  _respawn() {
+    if (!this.isDead()) return;
+
+    const desiredPos = [SPAWN_POINT[0] + getRandomInt(-10, 10), SPAWN_POINT[1] + getRandomInt(-10, 10)];
+
+    if (this.map.canMove(desiredPos[0], desiredPos[1])) {
+      const attrs = this.getAttrs();
+
+      this.hp = attrs.hp;
+      this.mana = attrs.mana;
+      this.changeState(STATE.IDLE);
+      this.placeEntity(desiredPos[0], desiredPos[1]);
+      this.connection.emitInfo("You have been respawned.");
+      this.emitAttributes();
+      this.emitBasicAttrsUpdated();
+    } else {
+      this.respawn();
+    }
   }
 
   getMap() {
