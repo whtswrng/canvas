@@ -13,10 +13,12 @@ const { Inventory } = require("./entity/inventory");
 const { StorageInteraction } = require("./interactions/storage-interaction");
 const { AlchemyInteraction } = require("./interactions/alchemy-interaction");
 const { EnchantingInteraction } = require("./interactions/enchanting-interaction");
+const { SmithingInteraction } = require("./interactions/smithing-interaction");
 
 const shopInteraction = new ShopInteraction();
 const alchemyInteraction = new AlchemyInteraction();
 const enchantingInteraction = new EnchantingInteraction();
+const smithingInteraction = new SmithingInteraction();
 const storageInteraction = new StorageInteraction();
 
 const shop = new Interactable({
@@ -58,6 +60,16 @@ const enchanting = new Interactable({
   interaction: enchantingInteraction,
 });
 enchanting.place();
+
+const smithing = new Interactable({
+  name: "Armory",
+  description: "You can craft armors and weapons here.",
+  x: 4,
+  y: 13,
+  map,
+  interaction: smithingInteraction,
+});
+smithing.place();
 
 const tree = new Material({
   type: "tree",
@@ -121,7 +133,7 @@ function createMob(name, x, y) {
   ec.controlsEnabled = true;
   ec.autoDefendEnabled = true;
   enemy.placeEntity(x, y); // Place an enemy nearby
-  ec.init();
+  // ec.init();
 }
 
 function createPlayer(name, kind, socket, x, y) {

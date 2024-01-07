@@ -96,7 +96,7 @@ class Entity {
       };
     if (this.kind === "tank")
       return {
-        name: "armorsmith",
+        name: "smithing",
         level: 0,
         maxLevel: 350,
       };
