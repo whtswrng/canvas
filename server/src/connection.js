@@ -25,13 +25,13 @@ class Connection {
       for (const cell of row) {
         rows.push({
           type: cell.type,
-          bg: cell.bg,
           x: cell.x,
           y: cell.y,
           interactable: cell.interactable
             ? {
                 name: cell.interactable.name,
                 description: cell.interactable.description,
+                scale: cell.interactable.scale ?? 1,
               }
             : null,
           material: cell.material
@@ -53,6 +53,7 @@ class Connection {
                 maxMana: cell.occupiedBy.maxMana,
                 state: cell.occupiedBy.state,
                 kind: cell.occupiedBy.kind,
+                scale: cell.occupiedBy.scale ?? 1,
               }
             : null,
         });

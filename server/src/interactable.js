@@ -4,11 +4,12 @@ const { createItem } = require("./item");
 const { generateUniqueString } = require("./utils");
 
 class Interactable {
-  constructor({ name, x, y, description, offsetX = 1, offsetY = 1, map, interaction }) {
+  constructor({ name, x, y, map, interaction, scale = 3 }) {
     this.name = name;
     (this.x = x), (this.y = y);
     this.map = map;
     this.interaction = interaction;
+    this.scale = scale;
     this.activeMap = {
       // entity id ->  request id
     };
@@ -16,9 +17,6 @@ class Interactable {
 
   place() {
     this.map.placeInteractable(this.x, this.y, this);
-    this.map.makeStatic(this.x + 1, this.y);
-    this.map.makeStatic(this.x, this.y + 1);
-    this.map.makeStatic(this.x + 1, this.y + 1);
   }
 
   interact(entity) {
