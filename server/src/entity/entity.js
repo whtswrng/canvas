@@ -297,7 +297,7 @@ class Entity {
 
   startEmitMap() {
     setInterval(() => {
-      this.connection.updateMap(this.map.getEntityMap(this));
+      this.connection.updateMap(this.map.getEntityStaticMap(this));
     }, MAP_REFRESH_RATE_IN_MS);
   }
 

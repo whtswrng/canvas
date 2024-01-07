@@ -1,10 +1,92 @@
 const { generateUniqueString } = require("./utils");
 
 
-// common magic powder (rare, epic)
-// 
+const itemsTo10 = {
+  "Worn Mittens": {
+    name: "Worn Mittens",
+    rarity: "common",
+    maxStack: 1,
+    equipable: true,
+    level: 3,
+    description: "Just a pair of tattered mittens",
+    type: "hands",
+    attrs: { hp: 10, mana: 10, power: 2, defense: 10 },
+  },
+  "Rusty Tin Can Hat": {
+    name: "Rusty Tin Can Hat",
+    rarity: "common",
+    maxStack: 1,
+    equipable: true,
+    level: 5,
+    description: "A hat made from a rusty tin can with questionable healing properties",
+    type: "head",
+    attrs: { hp: 15, mana: 20, power: 1, defense: 5 },
+  },
+  "Threadbare Blanket Robe": {
+    name: "Threadbare Blanket Robe",
+    rarity: "common",
+    maxStack: 1,
+    equipable: true,
+    level: 4,
+    description: "A robe that's seen better days, but it's soothing in its own way",
+    type: "armor",
+    attrs: { hp: 20, mana: 15, power: 1, defense: 8 },
+  },
+  "Squeaky Sneakers": {
+    name: "Squeaky Sneakers",
+    rarity: "common",
+    maxStack: 1,
+    equipable: true,
+    level: 3,
+    description: "Lightweight sneakers that emit a suspicious squeak with every step",
+    type: "boots",
+    attrs: { hp: 5, mana: 10, power: 1, defense: 5 },
+  },
+  "Slimy Fingerless Gloves": {
+    name: "Slimy Fingerless Gloves",
+    rarity: "common",
+    maxStack: 1,
+    equipable: true,
+    level: 5,
+    description: "Gloves with an oddly slimy texture and a hint of a healing touch",
+    type: "hands",
+    attrs: { hp: 5, mana: 25, power: 1, defense: 7 },
+  },
+  "Helm of Mild Discomfort": {
+    name: "Helm of Mild Discomfort",
+    rarity: "common",
+    maxStack: 1,
+    equipable: true,
+    level: 5,
+    description: "A helmet that causes mild discomfort but offers some protection",
+    type: "head",
+    attrs: { hp: 25, power: 4, defense: 4 },
+  },
+  "Flimsy Foil Plate": {
+    name: "Flimsy Foil Plate",
+    rarity: "common",
+    maxStack: 1,
+    equipable: true,
+    level: 8,
+    description: "A plate made of flimsy foil, surprisingly formidable in appearance",
+    type: "armor",
+    attrs: { hp: 30, mana: 0, power: 9, defense: 15 },
+  },
+  "Clunky Combat Boots": {
+    name: "Clunky Combat Boots",
+    rarity: "common",
+    maxStack: 1,
+    equipable: true,
+    level: 6,
+    description: "Boots that enhance attacking capabilities but feel clunky",
+    type: "boots",
+    attrs: { hp: 10, power: 6, defense: 8 },
+  },
+};
+
 
 const items = {
+  ...itemsTo10,
   Silver: {
     name: "Silver",
     rarity: "common",

@@ -5,6 +5,8 @@ class GameMap {
     this.width = width;
     this.height = height;
     this.map = this.generateMap();
+    this.cachedMap = {};
+    this.cachedPos = {};
   }
 
   generateMap() {
@@ -95,6 +97,45 @@ class GameMap {
     return playerMap;
   }
 
+  getEntityMap(player, radius = 6) {
+    const playerX = player.x;
+    const playerY = player.y;
+
+    const minX = Math.max(0, playerX - radius);
+    const maxX = Math.min(this.width - 1, playerX + radius);
+    const minY = Math.max(0, playerY - radius);
+    const maxY = Math.min(this.height - 1, playerY + radius);
+
+    const playerMap = [];
+
+    for (let y = minY; y <= maxY; y++) {
+      const row = [];
+      for (let x = minX; x <= maxX; x++) {
+        row.push(this.map[y][x]);
+      }
+      playerMap.push(row);
+    }
+
+    return playerMap;
+  }
+
+  getEntityStaticMap(player, radius = 6) {
+    if (!this.cachedMap[player.id]) {
+      this.cachedMap[player.id] = this.getEntityMap(player, radius);
+      this.cachedPos[player.id] = [player.x, player.y];
+    }
+
+    if (
+      Math.abs(this.cachedPos[player.id][0] - player.x) >= 5 ||
+      Math.abs(this.cachedPos[player.id][1] - player.y) >= 5
+    ) {
+      this.cachedMap[player.id] = this.getEntityMap(player, radius);
+      this.cachedPos[player.id] = [player.x, player.y];
+    }
+
+    return this.cachedMap[player.id];
+  }
+
   print(rawMap) {
     for (const row of rawMap) {
       let rowString = "";
@@ -159,14 +200,7 @@ function createRandomObject(x, y) {
   }
 }
 
-function createObject(
-  x,
-  y,
-  type = "dirt",
-  bg = "#4B5320",
-  _static = false,
-  material = null
-) {
+function createObject(x, y, type = "dirt", bg = "#4B5320", _static = false, material = null) {
   return {
     x,
     y,
