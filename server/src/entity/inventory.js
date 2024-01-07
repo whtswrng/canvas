@@ -1,4 +1,4 @@
-const { createItem } = require("../item");
+const { createItem } = require("../config/item");
 const { getRandomInt } = require("../utils");
 
 class Inventory {

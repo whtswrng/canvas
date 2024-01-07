@@ -1,6 +1,6 @@
 const { map } = require("../globals");
 const { Interactable } = require("../interactable");
-const { createItem } = require("../item");
+const { createItem } = require("../config/item");
 const { getRandomInt, generateUniqueString, calculatePercentage, isItemEnchantable } = require("../utils");
 
 const MAP_REFRESH_RATE_IN_MS = 180;
@@ -26,7 +26,7 @@ class Entity {
     id,
     name,
     speed,
-    kind,
+    _class,
     experience,
     type = "player",
     inventory,
@@ -41,7 +41,7 @@ class Entity {
     this.id = id;
     this.name = name;
     this.type = type;
-    this.kind = kind; // rat, light-mage, ...
+    this._class = _class; // rat, light-mage, ...
     this.connection = connection;
     this.autoDefend = autoDefend;
     this.experience = experience;
@@ -84,28 +84,31 @@ class Entity {
   }
 
   generateSecondaryClass() {
-    if (this.kind === "healer")
+    if (this._class === "healer")
       return {
         name: "alchemy",
         level: 0,
         maxLevel: 350,
       };
-    if (this.kind === "mage")
+    if (this._class === "mage")
       return {
         name: "enchanting",
         level: 0,
         maxLevel: 350,
       };
-    if (this.kind === "tank")
+    if (this._class === "tank")
       return {
         name: "smithing",
         level: 0,
         maxLevel: 350,
       };
+
+      console.log('===================')
+      console.log(this._class)
   }
 
   generateBaseAttrs() {
-    if (this.kind === "healer")
+    if (this._class === "healer")
       return {
         hp: 200,
         hpRegeneration: 5,
@@ -115,7 +118,7 @@ class Entity {
         power: 20,
         critChance: 5,
       };
-    if (this.kind === "mage")
+    if (this._class === "mage")
       return {
         hp: 200,
         hpRegeneration: 5,
@@ -125,7 +128,7 @@ class Entity {
         power: 50,
         critChance: 5,
       };
-    if (this.kind === "tank")
+    if (this._class === "tank")
       return {
         hp: 400,
         hpRegeneration: 10,
@@ -147,7 +150,7 @@ class Entity {
     this.mana = attrs.mana;
 
     this.initRegenInterval();
-    if (this.kind === "healer") {
+    if (this._class === "healer") {
       this.initHealing();
     }
     this.connection.entityInit(this);
@@ -594,7 +597,7 @@ class Entity {
   hitEnemy(enemy) {
     if (enemy.isDead() || this.isDead()) return;
 
-    let manaCost = this.kind === "mage" ? MAGE_SPELL_MANA_COST : TANK_SPELL_MANA_COST;
+    let manaCost = this._class === "mage" ? MAGE_SPELL_MANA_COST : TANK_SPELL_MANA_COST;
     if (this.type === "mob") manaCost = 0;
 
     if (this.mana - manaCost < 0) return;
@@ -937,7 +940,7 @@ class Entity {
       this.emitAttributes();
       this.emitBasicAttrsUpdated();
     } else {
-      this.respawn();
+      this._respawn();
     }
   }
 

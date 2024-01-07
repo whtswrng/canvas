@@ -49,10 +49,10 @@ class Connection {
                 level: cell.occupiedBy.level,
                 hp: cell.occupiedBy.hp,
                 maxHp: cell.occupiedBy.getAttrs().hp,
+                _class: cell.occupiedBy._class,
                 mana: cell.occupiedBy.mana,
                 maxMana: cell.occupiedBy.maxMana,
                 state: cell.occupiedBy.state,
-                kind: cell.occupiedBy.kind,
                 scale: cell.occupiedBy.scale ?? 1,
               }
             : null,

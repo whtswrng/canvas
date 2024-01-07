@@ -1,4 +1,4 @@
-const { createItem } = require("../item");
+const { createItem } = require("../config/item");
 const { createItemOption, SecondaryClassInteraction } = require("./alchemy-interaction");
 
 class SmithingInteraction extends SecondaryClassInteraction {

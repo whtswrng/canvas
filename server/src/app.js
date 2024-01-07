@@ -3,6 +3,7 @@ const express = require("express");
 const { map, app, io, server } = require("./globals");
 const { User } = require("./user");
 const { createPlayer } = require("./mocks");
+const { spawnMobs } = require("./config/mob");
 require("./mocks");
 
 // Serve static files from the 'public' directory
@@ -20,10 +21,13 @@ server.listen(PORT, () => {
   init();
 });
 
+spawnMobs();
+
 async function init() {
   // Set up a connection event for new Socket.IO connections
-  io.on("connection", async(socket) => {
+  io.on("connection", async (socket) => {
     console.log("A user connected");
+
     const user = new User(socket, [
       createPlayer("Ferda", "mage", socket, 7, 7),
       createPlayer("Blobko", "healer", socket, 12, 5),

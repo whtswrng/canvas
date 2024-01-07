@@ -28,7 +28,7 @@ export const Attributes = ({ attrs }) => {
         ---
       </div>
       <div className="attribute">
-        <div className="attribute-name">{capitalizeFirstLetter(attrs.secondaryClass.name)}</div>
+        <div className="attribute-name">{capitalizeFirstLetter(attrs?.secondaryClass?.name)}</div>
         <div className="attribute-value">
           {attrs.secondaryClass.level}/{attrs.secondaryClass.maxLevel}
         </div>

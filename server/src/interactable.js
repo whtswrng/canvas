@@ -1,6 +1,6 @@
 const { createObject } = require("./game-map");
 const { map } = require("./globals");
-const { createItem } = require("./item");
+const { createItem } = require("./config/item");
 const { generateUniqueString } = require("./utils");
 
 class Interactable {

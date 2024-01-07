@@ -1,8 +1,3 @@
-const { Connection } = require("./connection");
-const { Entity } = require("./entity/entity");
-const { getRandomInt } = require("./utils");
-const { enemy, createPlayer } = require("./mocks");
-const { EntityController: EntityControl } = require("./entity/entity-controller");
 const fs = require("fs");
 
 let controlPanelInMemory = [];

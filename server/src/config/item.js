@@ -1,5 +1,4 @@
-const { generateUniqueString } = require("./utils");
-
+const { generateUniqueString } = require("../utils");
 
 const itemsTo10 = {
   "Worn Mittens": {

@@ -3,7 +3,7 @@ import { Tooltip } from "react-tooltip";
 
 export const Entity = ({ cell, tooltipOpen }) => {
   const entity = cell.occupiedBy;
-  const backgroundImageUrl = `/images/${entity.kind}.jpg`; // Replace with your image URL
+  const backgroundImageUrl = `/images/${entity._class ?? entity.name.toLowerCase()}.jpg`; // Replace with your image URL
 
   const calculatePercentage = (current, total) => {
     return (current / total) * 100;

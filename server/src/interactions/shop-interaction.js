@@ -1,4 +1,4 @@
-const { createItem } = require("../item");
+const { createItem } = require("../config/item");
 
 function createItemOption(entity, item, requirementItems) {
   return {

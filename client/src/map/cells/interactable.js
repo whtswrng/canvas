@@ -15,8 +15,10 @@ export const Interactable = ({ cell }) => {
         id={"interactable-" + cell.x + cell.y}
         style={{
           position: 'absolute',
-          width: 80,
-          height: 80,
+          width: 40,
+          height: 40,
+          zIndex: 3,
+          transform: `scale(${obj.scale})`,
           backgroundImage: `url(${backgroundImageUrl})`,
           backgroundColor: cell.bg + "96",
           backgroundSize: "cover",

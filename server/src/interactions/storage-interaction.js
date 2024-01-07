@@ -1,5 +1,5 @@
 const { STATE } = require("../entity/entity");
-const { createItem } = require("../item");
+const { createItem } = require("../config/item");
 
 class StorageInteraction {
   constructor(storedItems = []) {

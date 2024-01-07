@@ -7,7 +7,7 @@ const { Connection } = require("./connection");
 const { Entity } = require("./entity/entity");
 const { getRandomInt } = require("./utils");
 const { Interactable } = require("./interactable");
-const { createItem } = require("./item");
+const { createItem } = require("./config/item");
 const { ShopInteraction } = require("./interactions/shop-interaction");
 const { Inventory } = require("./entity/inventory");
 const { StorageInteraction } = require("./interactions/storage-interaction");
@@ -87,57 +87,7 @@ const tree = new Material({
 });
 tree.placeMaterial();
 
-const mob1 = createMob("Rat", 10, 13);
-
-function createMob(name, x, y) {
-  const enemy = new MobEntity({
-    name: name,
-    kind: "rat",
-    speed: 0,
-    map,
-    experience: 1,
-    respawnInS: 4,
-    drops: [{ name: "Varnish", min: 1, max: 3, chance: 99 }],
-    attrs: { power: 90 },
-    dropExperience: 50,
-  });
-  enemy.init();
-
-  const controls = [
-    {
-      type: "basic",
-      actionType: "attackEnemy",
-      actionValue: "",
-      condition: "ifTargetLvl",
-      conditionValue: "isLowerThan",
-      conditionComparisonValue: "99",
-    },
-    {
-      type: "pathing",
-      actionType: "goToPosition",
-      actionValue: `${x - 1} ${y}`,
-      condition: "",
-      conditionValue: "",
-      conditionComparisonValue: "",
-    },
-    {
-      type: "pathing",
-      actionType: "goToPosition",
-      actionValue: `${x + 5} ${y + 2}`,
-      condition: "",
-      conditionValue: "",
-      conditionComparisonValue: "",
-    },
-  ];
-
-  const ec = new EntityController(enemy, controls);
-  ec.controlsEnabled = true;
-  ec.autoDefendEnabled = true;
-  enemy.placeEntity(x, y); // Place an enemy nearby
-  ec.init();
-}
-
-function createPlayer(name, kind, socket, x, y) {
+function createPlayer(name, _class, socket, x, y) {
   const entityId = getRandomInt(0, 1000000);
   const connection = new Connection(entityId, socket, map);
   const inventory = new Inventory(connection);
@@ -155,7 +105,7 @@ function createPlayer(name, kind, socket, x, y) {
   const p = new Entity({
     id: entityId,
     name: name,
-    kind: kind ?? "mage",
+    _class: _class ?? "mage",
     speed: 0,
     experience: 1,
     attackRange: 4,
@@ -175,7 +125,5 @@ function createPlayer(name, kind, socket, x, y) {
 }
 
 module.exports = {
-  enemy: mob1,
   createPlayer,
-  createMob,
 };

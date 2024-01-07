@@ -16,7 +16,6 @@ const mockConnection = new MockedConnection("", mockedSocket);
 class MobEntity extends Entity {
   constructor({
     name,
-    kind,
     speed,
     experience,
     autoDefend = true,
@@ -29,7 +28,6 @@ class MobEntity extends Entity {
     super({
       id: generateUniqueString(),
       name,
-      kind,
       speed,
       experience,
       inventory: new Inventory(mockConnection),
@@ -100,7 +98,6 @@ class MobEntity extends Entity {
   }
 
   spawn() {
-    console.log("==========+RESPAWN=========");
     this.hp = this.originalHp;
     this.mana = this.originalMana;
     this.x = this.originalX;
