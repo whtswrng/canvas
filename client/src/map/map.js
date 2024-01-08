@@ -24,10 +24,7 @@ export const Map = ({ playerId }) => {
   };
 
   return (
-    <div
-      className="map-container"
-      onMouseLeave={() => setMapRefreshEnabled(true)}
-    >
+    <div className="map-container" onMouseLeave={() => setMapRefreshEnabled(true)}>
       {map.map.map((row, rowIndex) => (
         <div key={rowIndex} className="map-row">
           {row.map((cell, cellIndex) => (
@@ -37,6 +34,7 @@ export const Map = ({ playerId }) => {
           ))}
         </div>
       ))}
+      {renderPlayers(map)}
     </div>
   );
 
@@ -50,10 +48,37 @@ export const Map = ({ playerId }) => {
           handleClick(cell);
         }}
       >
-        {cell.occupiedBy && <Entity cell={cell} />}
         {cell.material && <Material cell={cell} />}
         {cell.interactable && <Interactable cell={cell} />}
       </Ground>
+    );
+  }
+
+  function renderPlayers(map) {
+    const playerCells = [];
+    for (let y = 0; y < map.map.length; y++) {
+      for (let x = 0; x < map.map[y].length; x++) {
+        const cell = map.map[y][x];
+        if (cell.occupiedBy) playerCells.push({ cell, y, x });
+      }
+    }
+
+    return (
+      <>
+        {playerCells.map((p) => (
+          <div
+            onMouseUp={() => {
+              setMapRefreshEnabled(true);
+              handleClick(p.cell);
+            }}
+            key={p.cell.occupiedBy.id}
+            className={`map-cell moving-cell ${p.type}`}
+            style={{ marginLeft: p.x * 40.5, marginTop: p.y * 40 }}
+          >
+            <Entity cell={p.cell} />
+          </div>
+        ))}
+      </>
     );
   }
 };

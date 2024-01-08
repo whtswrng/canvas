@@ -33,7 +33,7 @@ class Connection {
                 description: cell.interactable.description,
                 scale: cell.interactable.scale ?? 1,
               }
-            : null,
+            : undefined,
           material: cell.material
             ? {
                 name: cell.material.name,
@@ -41,7 +41,7 @@ class Connection {
                 hp: cell.material.hp,
                 maxHp: cell.material.maxHp,
               }
-            : null,
+            : undefined,
           occupiedBy: cell.occupiedBy
             ? {
                 id: cell.occupiedBy.id,
@@ -55,7 +55,7 @@ class Connection {
                 state: cell.occupiedBy.state,
                 scale: cell.occupiedBy.scale ?? 1,
               }
-            : null,
+            : undefined,
         });
       }
       newMap.push(rows);

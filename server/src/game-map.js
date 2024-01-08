@@ -1,10 +1,22 @@
 const { getRandomInt } = require("./utils");
+const {writeFileSync} = require('fs');
+
+function saveToJsonFile(data) {
+  try {
+    const jsonData = JSON.stringify(data, null, 2); // The third argument (2) specifies the number of spaces to use for indentation.
+    writeFileSync("./map", jsonData, "utf8");
+    console.log("JSON data saved to file successfully.");
+  } catch (err) {
+    console.error("Error saving JSON data to file:", err.message);
+  }
+}
 
 class GameMap {
   constructor(width, height) {
     this.width = width;
     this.height = height;
     this.map = this.generateMap();
+    saveToJsonFile(this.map);
     this.cachedMap = {};
     this.cachedPos = {};
   }
