@@ -1,11 +1,10 @@
-
-
 .player-container {
   position: relative;
   overflow: hidden;
   width: 100%;
   height: 100%;
   filter: drop-shadow(2px 4px 6px black);
+  transition: transform 0.2s ease-in-out, filter 0.2s linear;
 }
 
 .player-container::before {
@@ -69,4 +68,19 @@
 .player-image {
   height: 100%;
   width: 100%;
+}
+
+.mage-spell-casted {
+  transform: scale(1.3);
+  filter: contrast(0.4);
+}
+
+.healer-spell-casted {
+  transform: scale(1.3);
+  filter: sepia(1);
+}
+
+.tank-spell-casted {
+  transform: scale(1.3) rotate(260deg);
+  filter: contrast(1);
 }

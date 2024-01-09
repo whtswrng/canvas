@@ -1,24 +1,47 @@
+import { useEffect, useState } from "react";
 import "./player.css";
 import { Tooltip } from "react-tooltip";
+import { socket } from "../../App";
 
 export const Entity = ({ cell, tooltipOpen }) => {
   const entity = cell.occupiedBy;
   const backgroundImageUrl = `/images/${entity._class ?? entity.name.toLowerCase()}.jpg`; // Replace with your image URL
+  const [spellCasted, setSpellCasted] = useState(false);
 
+  useEffect(() => {
+    const listener = socket.on("ENEMY_HIT", ({ playerId }) => {
+      if (playerId === entity.id) {
+        setSpellCasted(true);
+        setTimeout(() => setSpellCasted(false), 400);
+      }
+    });
+
+    return () => {
+      socket.off(listener);
+    };
+  }, []);
+  
   const calculatePercentage = (current, total) => {
     return (current / total) * 100;
   };
 
+  const getSpellCastedClass = () => {
+    if(!spellCasted) return '';
+    if (entity._class === 'mage') return 'mage-spell-casted';
+    if (entity._class === 'healer') return 'healer-spell-casted';
+    if (entity._class === 'tank') return 'tank-spell-casted';
+  }
+
   return (
     <>
       <div
-        className={"player-container " + entity.state?.toLowerCase()}
+        className={`player-container ${getSpellCastedClass()} ${entity.state?.toLowerCase()}`}
         id={"player-" + entity.id}
         style={{
           backgroundColor: cell.bg,
           backgroundImage: `url(${backgroundImageUrl})`,
           backgroundSize: "cover",
-          backgroundPosition: "center"
+          backgroundPosition: "center",
         }}
       >
         <div className="player-progress-bar">
@@ -38,11 +61,13 @@ export const Entity = ({ cell, tooltipOpen }) => {
           </span>
         </div>
         {/* <div style={{ fontSize: 8, fontWeight: 200 }}>Passive</div> */}
-        <div style={{ fontSize: 8, fontWeight: 200 }}>{cell.x} | {cell.y}</div>
-        <div style={{color: 'green'}}>
+        <div style={{ fontSize: 8, fontWeight: 200 }}>
+          {cell.x} | {cell.y}
+        </div>
+        <div style={{ color: "green" }}>
           Hp {entity.hp}/{entity.maxHp}
         </div>
-        <div style={{color: '#007FFF'}}>
+        <div style={{ color: "#007FFF" }}>
           Mana {entity.mana}/{entity.maxMana}
         </div>
       </Tooltip>

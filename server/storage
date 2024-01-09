@@ -48,22 +48,6 @@
     "name": "Attack",
     "controls": [
       {
-        "type": "pathing",
-        "actionType": "goToPosition",
-        "actionValue": "8 10",
-        "condition": "",
-        "conditionValue": "",
-        "conditionComparisonValue": ""
-      },
-      {
-        "type": "pathing",
-        "actionType": "goToPosition",
-        "actionValue": "11 11",
-        "condition": "",
-        "conditionValue": "",
-        "conditionComparisonValue": ""
-      },
-      {
         "type": "basic",
         "actionType": "attackEnemy",
         "actionValue": "",
