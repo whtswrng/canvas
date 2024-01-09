@@ -25,8 +25,10 @@ class Connection {
       for (const cell of row) {
         rows.push({
           type: cell.type,
+          bg: cell.bg,
           x: cell.x,
           y: cell.y,
+          scale: cell.scale,
           interactable: cell.interactable
             ? {
                 name: cell.interactable.name,

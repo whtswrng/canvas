@@ -21,55 +21,55 @@ const enchantingInteraction = new EnchantingInteraction();
 const smithingInteraction = new SmithingInteraction();
 const storageInteraction = new StorageInteraction();
 
-const shop = new Interactable({
-  name: "Magic shop",
-  description: "You can buy a lot of stuff here",
-  x: 3,
-  y: 3,
-  map,
-  interaction: shopInteraction,
-});
-shop.place();
+// const shop = new Interactable({
+//   name: "Magic shop",
+//   description: "You can buy a lot of stuff here",
+//   x: 3,
+//   y: 3,
+//   map,
+//   interaction: shopInteraction,
+// });
+// shop.place();
 
-const storage = new Interactable({
-  name: "Storage",
-  description: "You can store your items here.",
-  x: 7,
-  y: 3,
-  map,
-  interaction: storageInteraction,
-});
-storage.place();
+// const storage = new Interactable({
+//   name: "Storage",
+//   description: "You can store your items here.",
+//   x: 7,
+//   y: 3,
+//   map,
+//   interaction: storageInteraction,
+// });
+// storage.place();
 
-const alchemy = new Interactable({
-  name: "Alchemy",
-  description: "You can craft your potions here.",
-  x: 12,
-  y: 3,
-  map,
-  interaction: alchemyInteraction,
-});
-alchemy.place();
+// const alchemy = new Interactable({
+//   name: "Alchemy",
+//   description: "You can craft your potions here.",
+//   x: 519,
+//   y: 514,
+//   map,
+//   interaction: alchemyInteraction,
+// });
+// alchemy.place();
 
-const enchanting = new Interactable({
-  name: "Enchanting Fortress",
-  description: "You can craft enchants and gems here.",
-  x: 4,
-  y: 8,
-  map,
-  interaction: enchantingInteraction,
-});
-enchanting.place();
+// const enchanting = new Interactable({
+//   name: "Enchanting Fortress",
+//   description: "You can craft enchants and gems here.",
+//   x: 4,
+//   y: 8,
+//   map,
+//   interaction: enchantingInteraction,
+// });
+// enchanting.place();
 
-const smithing = new Interactable({
-  name: "Armory",
-  description: "You can craft armors and weapons here.",
-  x: 4,
-  y: 13,
-  map,
-  interaction: smithingInteraction,
-});
-smithing.place();
+// const smithing = new Interactable({
+//   name: "Armory",
+//   description: "You can craft armors and weapons here.",
+//   x: 4,
+//   y: 13,
+//   map,
+//   interaction: smithingInteraction,
+// });
+// smithing.place();
 
 const tree = new Material({
   type: "tree",

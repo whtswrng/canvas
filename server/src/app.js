@@ -29,8 +29,8 @@ async function init() {
     console.log("A user connected");
 
     const user = new User(socket, [
-      createPlayer("Ferda", "mage", socket, 7, 7),
-      createPlayer("Blobko", "healer", socket, 12, 5),
+      createPlayer("Ferda", "mage", socket, 515, 515),
+      // createPlayer("Blobko", "healer", socket, 510, 510),
     ]);
     await user.initControlPanel();
     // const user = new User(socket, [createPlayer('Ferda', socket, 7, 7)]);

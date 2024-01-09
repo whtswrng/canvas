@@ -1,9 +1,6 @@
 .map-container {
   display: grid;
-  grid-template-columns: repeat(
-    auto-fill,
-    minmax(40px, 1fr)
-  ); /* Adjust column width as needed */
+  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); /* Adjust column width as needed */
   gap: 0px; /* Adjust gap between cells as needed */
 }
 
@@ -23,7 +20,10 @@
   position: absolute;
   height: 40px;
   width: 40px;
-  transition: margin-left 200ms linear, margin-top 200ms linear;
+}
+
+.moving-cell.moving {
+  transition: margin-left 510ms linear, margin-top 510ms linear;
 }
 
 .map-cell:hover {

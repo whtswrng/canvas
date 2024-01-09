@@ -56,6 +56,7 @@ class MobEntity extends Entity {
     this.autoDefend = autoDefend;
     this.dropExperience = dropExperience;
     this.baseAttrs = this.attrs;
+    this.movementSpeed = 800;
   }
 
   gainExperience(exp) {

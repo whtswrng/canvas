@@ -1,5 +1,21 @@
+const { mapConfiguration } = require("./config/map");
+const { app } = require("./globals");
+const { Interactable } = require("./interactable");
+const { AlchemyInteraction } = require("./interactions/alchemy-interaction");
+const { EnchantingInteraction } = require("./interactions/enchanting-interaction");
+const { ShopInteraction } = require("./interactions/shop-interaction");
+const { SmithingInteraction } = require("./interactions/smithing-interaction");
+const { StorageInteraction } = require("./interactions/storage-interaction");
 const { getRandomInt } = require("./utils");
-const {writeFileSync} = require('fs');
+const { writeFileSync } = require("fs");
+
+const buildingTypeToInteractable = {
+  smithing: SmithingInteraction,
+  alchemy: AlchemyInteraction,
+  enchanting: EnchantingInteraction,
+  storage: StorageInteraction,
+  "magic-shop": ShopInteraction,
+};
 
 function saveToJsonFile(data) {
   try {
@@ -16,9 +32,85 @@ class GameMap {
     this.width = width;
     this.height = height;
     this.map = this.generateMap();
-    saveToJsonFile(this.map);
+    this.applyConfiguration();
+    // saveToJsonFile(this.map);
     this.cachedMap = {};
     this.cachedPos = {};
+  }
+
+  applyConfiguration() {
+    mapConfiguration.forEach(
+      ({
+        type,
+        interactableType,
+        name,
+        description,
+        x,
+        y,
+        width,
+        height,
+        thickness,
+        objectType,
+        _static,
+        bgColor,
+        scale = 1,
+      }) => {
+        switch (type) {
+          case "interactable":
+            this.createInteractable(x, y, interactableType, name, description, scale);
+            this.applyScale(x, y);
+            break;
+          case "static":
+            this.placeObject(x, y, createObject(x, y, name, bgColor, true, null, scale));
+            if (scale > 1) {
+              this.applyScale(x, y);
+            }
+            break;
+          case "H":
+            this.placeHollowRectangle(x, y, objectType, bgColor, width, height, thickness, _static);
+            break;
+          case "F":
+            this.placeRectangle(x, y, objectType, bgColor, width, height, _static);
+            break;
+          default:
+            // Handle unsupported types or errors
+            console.error(`Unsupported type: ${type}`);
+        }
+      }
+    );
+  }
+
+  applyScale(x, y) {
+    this.makePositionStatic(x - 1, y); // left
+    this.makePositionStatic(x + 1, y); // right
+
+    this.makePositionStatic(x, y + 1); // up
+    this.makePositionStatic(x, y - 1); // down
+
+    this.makePositionStatic(x - 1, y + 1); // up diag
+    this.makePositionStatic(x + 1, y + 1); // up diag
+
+    this.makePositionStatic(x - 1, y - 1); // down diag
+    this.makePositionStatic(x + 1, y - 1); // down diag
+  }
+
+  placeHollowRectangle(x, y, objectType, bgColor, width, height, thickness, _static) {
+    for (let i = 0; i < height; i++) {
+      for (let j = 0; j < width; j++) {
+        if (i < thickness || i >= height - thickness || j < thickness || j >= width - thickness) {
+          this.placeObject(x + j, y + i, createObject(x + j, y + i, objectType, bgColor, _static, null));
+        }
+      }
+    }
+  }
+
+  // No need to use parseInt for x, y, width, height here
+  placeRectangle(x, y, objectType, bgColor, width, height, _static) {
+    for (let i = 0; i < height; i++) {
+      for (let j = 0; j < width; j++) {
+        this.placeObject(x + j, y + i, createObject(x + j, y + i, objectType, bgColor, _static, null));
+      }
+    }
   }
 
   generateMap() {
@@ -148,6 +240,10 @@ class GameMap {
     return this.cachedMap[player.id];
   }
 
+  makePositionStatic(x, y) {
+    this.map[y][x].static = true;
+  }
+
   print(rawMap) {
     for (const row of rawMap) {
       let rowString = "";
@@ -201,6 +297,20 @@ class GameMap {
   isValidPosition(x, y) {
     return x >= 0 && x < this.width && y >= 0 && y < this.height;
   }
+
+  createInteractable(x, y, interactableType, name, description = "Foo", scale = 3) {
+    this.map[y][x].scale = scale;
+    const InteractableConstructor = buildingTypeToInteractable[interactableType];
+    const interactable = new Interactable({
+      name,
+      description,
+      x,
+      y,
+      map: this,
+      interaction: new InteractableConstructor(),
+    });
+    interactable.place();
+  }
 }
 
 function createRandomObject(x, y) {
@@ -212,11 +322,12 @@ function createRandomObject(x, y) {
   }
 }
 
-function createObject(x, y, type = "dirt", bg = "#4B5320", _static = false, material = null) {
+function createObject(x, y, type = "dirt", bg = "#4B5320", _static = false, material = null, scale = 1) {
   return {
     x,
     y,
     type,
+    scale,
     bg,
     occupiedBy: null,
     interactable: null,

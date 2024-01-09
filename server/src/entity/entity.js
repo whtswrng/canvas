@@ -3,6 +3,7 @@ const { Interactable } = require("../interactable");
 const { createItem } = require("../config/item");
 const { getRandomInt, generateUniqueString, calculatePercentage, isItemEnchantable } = require("../utils");
 
+
 const MAP_REFRESH_RATE_IN_MS = 180;
 const REGEN_INTERVAL = 2000;
 const HEALING_SPELL_COOLDOWN = 500;
@@ -75,7 +76,7 @@ class Entity {
     this.x = 0;
     this.y = 0;
 
-    this.movementSpeed = 700;
+    this.movementSpeed = 500;
     this.movingIsBlocked = false;
 
     this.healingTimeout = null;
@@ -103,8 +104,8 @@ class Entity {
         maxLevel: 350,
       };
 
-      console.log('===================')
-      console.log(this._class)
+    console.log("===================");
+    console.log(this._class);
   }
 
   generateBaseAttrs() {
@@ -141,7 +142,7 @@ class Entity {
   }
 
   init() {
-    console.log('FUCKING CALLLLLLLLLLEEEEEEEEEEED');
+    console.log("FUCKING CALLLLLLLLLLEEEEEEEEEEED");
     // base attrs
     this.baseAttrs = this.generateBaseAttrs();
 
@@ -966,7 +967,9 @@ class Entity {
     this.hp = 0;
     clearTimeout(this.healingTimeout);
     this.stopAll();
-    map.removeEntity(this.x, this.y);
+    if (map) {
+      map.removeEntity(this.x, this.y);
+    }
     console.log("removing from map");
   }
 }

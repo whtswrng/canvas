@@ -11,8 +11,9 @@ const mobs = [
     attrs: { power: 90 },
     dropExperience: 50,
     spawnPoints: [
-      [11, 11],
-      [12, 14],
+      [531, 507],
+      [536, 506],
+      [539, 505],
     ],
     aggresive: false,
   },
@@ -22,7 +23,9 @@ function spawnMobs() {
   for (const m of mobs) {
     for (const spawnPoint of m.spawnPoints) {
       console.log("creating an entity!!!!!!!=============================================");
-      createMob(spawnPoint[0], spawnPoint[1], { ...m });
+      setTimeout(() => {
+        createMob(spawnPoint[0], spawnPoint[1], { ...m });
+      }, getRandomInt(0, 400));
     }
   }
 }

@@ -8,6 +8,7 @@ export const Ground = ({ cell, children, ...rest }) => {
         backgroundColor: cell.bg,
         height: 40,
         width: 40,
+        transform: cell.scale > 1 ? 'scale(3)' : '',
         backgroundImage: `url(${backgroundImageUrl})`,
         backgroundSize: "cover",
         backgroundPosition: "center",

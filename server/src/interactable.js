@@ -1,6 +1,3 @@
-const { createObject } = require("./game-map");
-const { map } = require("./globals");
-const { createItem } = require("./config/item");
 const { generateUniqueString } = require("./utils");
 
 class Interactable {
@@ -16,6 +13,7 @@ class Interactable {
   }
 
   place() {
+    console.log("placing interactable", this.x, this.y);
     this.map.placeInteractable(this.x, this.y, this);
   }
 

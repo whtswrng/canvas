@@ -10,7 +10,6 @@ app.use(cors());
 const server = http.createServer(app);
 
 const map = new GameMap(1000, 1000);
-map.generateMap();
 
 // Create a Socket.IO instance attached to the server
 const io = socketIO(server);

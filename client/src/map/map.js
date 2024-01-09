@@ -7,6 +7,8 @@ import { Material } from "./cells/material";
 import { useListen } from "../listen";
 import { Interactable } from "./cells/interactable";
 
+const cache = {};
+
 export const Map = ({ playerId }) => {
   const { data, loading } = useListen("MAP_UPDATED", playerId);
   const [mapRefreshEnabled, setMapRefreshEnabled] = useState(true);
@@ -72,7 +74,7 @@ export const Map = ({ playerId }) => {
               handleClick(p.cell);
             }}
             key={p.cell.occupiedBy.id}
-            className={`map-cell moving-cell ${p.type}`}
+            className={`map-cell moving-cell ${getMovingClass(p)} ${p.type}`}
             style={{ marginLeft: p.x * 40.5, marginTop: p.y * 40 }}
           >
             <Entity cell={p.cell} />
@@ -80,5 +82,26 @@ export const Map = ({ playerId }) => {
         ))}
       </>
     );
+
+    function getMovingClass(p) {
+      const id = p.cell.occupiedBy.id;
+      if (!id) return "";
+      if (cache[id] === "blocked") return; // need to block the player so browser actually rerenders
+      if (!cache[id]) cache[id] = { x: p.x, y: p.y };
+
+      const oldX = cache[id].x;
+      const oldY = cache[id].y;
+
+      if (Math.abs(oldX - p.x) > 2 || Math.abs(oldY - p.y) > 2) {
+        cache[id] = "blocked";
+        setTimeout(() => {
+          cache[id] = { x: p.x, y: p.y };
+        }, 0);
+        return "";
+      }
+
+      cache[id] = { x: p.x, y: p.y };
+      return "moving";
+    }
   }
 };
