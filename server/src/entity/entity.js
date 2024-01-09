@@ -3,7 +3,6 @@ const { Interactable } = require("../interactable");
 const { createItem } = require("../config/item");
 const { getRandomInt, generateUniqueString, calculatePercentage, isItemEnchantable } = require("../utils");
 
-
 const MAP_REFRESH_RATE_IN_MS = 180;
 const REGEN_INTERVAL = 2000;
 const HEALING_SPELL_COOLDOWN = 500;
@@ -76,7 +75,7 @@ class Entity {
     this.x = 0;
     this.y = 0;
 
-    this.movementSpeed = 500;
+    this.movementSpeed = 550;
     this.movingIsBlocked = false;
 
     this.healingTimeout = null;
@@ -835,7 +834,7 @@ class Entity {
     return result;
   }
 
-  move(doneCb, movedCb) {
+  move(doneCb, movedCb, doNotBlock) {
     const finish = () => {
       this.stopMovement();
       this.targetLocation = null;
@@ -880,11 +879,12 @@ class Entity {
 
     this.movingTimeout = setTimeout(() => {
       this.movingIsBlocked = false;
-      this.move(doneCb, movedCb);
+      this.move(doneCb, movedCb, true);
     }, this.movementSpeed);
 
     doMove();
-    this.movingIsBlocked = true;
+
+    if (!doNotBlock) this.movingIsBlocked = true;
   }
 
   isDead() {

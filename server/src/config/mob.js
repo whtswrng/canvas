@@ -11,9 +11,9 @@ const mobs = [
     attrs: { power: 90 },
     dropExperience: 50,
     spawnPoints: [
-      [531, 507],
-      [536, 506],
-      [539, 505],
+      // [531, 507],
+      // [536, 506],
+      // [539, 505],
     ],
     aggresive: false,
   },
