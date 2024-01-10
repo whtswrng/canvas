@@ -35,6 +35,10 @@ export const Map = ({ playerId }) => {
     }
   };
 
+  const moveTowards = (data) => {
+    socket.emit("MOVE_TOWARDS_CELL", { playerId, ...data });
+  };
+
   return (
     <div className="map-container" onMouseLeave={() => setMapRefreshEnabled(true)}>
       {map.map.map((row, rowIndex) => (
@@ -55,10 +59,14 @@ export const Map = ({ playerId }) => {
       <Ground
         cell={cell}
         onMouseDown={() => setMapRefreshEnabled(false)}
-        onMouseEnter={() => (editing && !mapRefreshEnabled) ? handleClick(cell) : null}
-        onMouseUp={() => {
+        onMouseEnter={() => (editing && !mapRefreshEnabled ? handleClick(cell) : null)}
+        onMouseUp={(e) => {
           setMapRefreshEnabled(true);
-          handleClick(cell);
+          if(e.shiftKey) {
+            moveTowards({x: cell.x, y: cell.y})
+          } else {
+            handleClick(cell);
+          }
         }}
       >
         {cell.material && <Material cell={cell} />}

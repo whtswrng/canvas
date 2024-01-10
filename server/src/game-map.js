@@ -260,8 +260,10 @@ class GameMap {
       Math.abs(this.cachedPos[player.id][0] - player.x) >= 5 ||
       Math.abs(this.cachedPos[player.id][1] - player.y) >= 5
     ) {
+      console.time();
       this.cachedMap[player.id] = this.getEntityMap(player, radius);
       this.cachedPos[player.id] = [player.x, player.y];
+      console.timeEnd();
     }
 
     return this.cachedMap[player.id];

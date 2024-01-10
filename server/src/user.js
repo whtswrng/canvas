@@ -228,6 +228,15 @@ class User {
       if (p) p.player.clickOnCell(data);
     });
 
+    this.socket.on("MOVE_TOWARDS_CELL", (data) => {
+      const playerId = data?.playerId;
+      const x = data?.x;
+      const y = data?.y;
+
+      const p = this.playersWithControls.find(({ player }) => player.id === playerId);
+      if (p) p.player.moveTowards(x, y);
+    });
+
     // Handle disconnections
     this.socket.on("disconnect", () => {
       for (const p of this.playersWithControls) {

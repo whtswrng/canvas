@@ -23,7 +23,7 @@
 }
 
 .moving-cell.moving {
-  transition: margin-left 510ms linear, margin-top 510ms linear;
+  transition: margin-left 110ms linear, margin-top 110ms linear;
 }
 
 .map-cell:hover {

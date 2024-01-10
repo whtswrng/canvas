@@ -75,7 +75,7 @@ class Entity {
     this.x = 0;
     this.y = 0;
 
-    this.movementSpeed = 550;
+    this.movementSpeed = 100;
     this.movingIsBlocked = false;
 
     this.healingTimeout = null;
@@ -644,6 +644,19 @@ class Entity {
     return this.calculateDistance(this.x, this.y, otherEntity.x, otherEntity.y) < 1.5;
   }
 
+  moveTowards(x, y) {
+    const [dx, dy] = this.getDirectionsToTarget(x, y);
+    let finalX = this.x;
+    if (dx === 1) finalX = this.map.width - 1;
+    if (dx === -1) finalX = 1;
+
+    let finalY = this.y;
+    if (dy === -1) finalY = 0;
+    if (dy === 1) finalY = this.map.height - 1;
+
+    return this.goToPosition(finalX, finalY);
+  }
+
   clickOnCell(cell) {
     this.stopAll();
 
@@ -838,7 +851,6 @@ class Entity {
     const finish = () => {
       this.stopMovement();
       this.targetLocation = null;
-      console.log("calling finish promise");
       doneCb?.();
     };
 
@@ -856,7 +868,7 @@ class Entity {
           this.x = x;
           this.y = y;
           this.updateMovementCb?.();
-          console.log("moved to", this.x, this.y);
+          // console.log("moved to", this.x, this.y);
           movedCb?.();
           if (this.targetLocation && this.targetLocation[0] === x && this.targetLocation[1] === y) {
             finish();
