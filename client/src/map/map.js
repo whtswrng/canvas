@@ -6,6 +6,7 @@ import { Entity } from "./cells/entity";
 import { Material } from "./cells/material";
 import { useListen } from "../listen";
 import { Interactable } from "./cells/interactable";
+import { MapGenerator } from "../character-list/map-generator/map-generator";
 
 const cache = {};
 
@@ -14,6 +15,11 @@ export const Map = ({ playerId }) => {
   const [mapRefreshEnabled, setMapRefreshEnabled] = useState(true);
   const [map, setMap] = useState([]);
 
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState("");
+  const [color, setColor] = useState("");
+  const [isStatic, setIsStatic] = useState(false);
+
   useEffect(() => {
     if (mapRefreshEnabled) setMap(data);
   }, [data]);
@@ -21,8 +27,12 @@ export const Map = ({ playerId }) => {
   if (loading) return <span>...</span>;
 
   const handleClick = (cell) => {
-    console.log(cell);
-    socket.emit("CELL_CLICKED", { playerId, ...cell });
+    if (editing) {
+      console.log(editing, name, color, isStatic, cell);
+      socket.emit("PAINT_CELL", { x: cell.x, y: cell.y, name, color, isStatic });
+    } else {
+      socket.emit("CELL_CLICKED", { playerId, ...cell });
+    }
   };
 
   return (
@@ -45,6 +55,7 @@ export const Map = ({ playerId }) => {
       <Ground
         cell={cell}
         onMouseDown={() => setMapRefreshEnabled(false)}
+        onMouseEnter={() => (editing && !mapRefreshEnabled) ? handleClick(cell) : null}
         onMouseUp={() => {
           setMapRefreshEnabled(true);
           handleClick(cell);
@@ -80,6 +91,14 @@ export const Map = ({ playerId }) => {
             <Entity cell={p.cell} />
           </div>
         ))}
+
+        <MapGenerator
+          editing={editing}
+          onClick={() => setEditing((prev) => !prev)}
+          setColor={setColor}
+          setName={setName}
+          setStatic={setIsStatic}
+        />
       </>
     );
 

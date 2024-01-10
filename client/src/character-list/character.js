@@ -8,6 +8,7 @@ import { Entity } from "../map/cells/entity";
 import { Inventory } from "./inventory/inventory";
 import { Interaction } from "./interaction/interaction";
 import { Effects } from "./effects/effects";
+import { MapGenerator } from "./map-generator/map-generator";
 
 export const Character = ({ character: defaultChar }) => {
   const { name } = defaultChar;
@@ -22,7 +23,7 @@ export const Character = ({ character: defaultChar }) => {
   const { data: enemyHit } = useListen("ENEMY_HIT", playerId);
   const { data: activePanel } = useListen("ACTIVE_CONTROL_PANEL", playerId);
 
-  const prevInteractionData = usePrevious({interactionData})
+  const prevInteractionData = usePrevious({ interactionData });
 
   useEffect(() => {
     if (interactionData && !activePanel?.panelName) {
@@ -136,6 +137,7 @@ export const Character = ({ character: defaultChar }) => {
       {state === "panel" && <ControlPanel playerId={playerId} />}
       {state === "inventory" && <Inventory playerId={playerId} />}
       {state === "interacting" && <Interaction playerId={playerId} data={interactionData} close={close} />}
+
     </div>
   );
 

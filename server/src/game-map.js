@@ -7,7 +7,7 @@ const { ShopInteraction } = require("./interactions/shop-interaction");
 const { SmithingInteraction } = require("./interactions/smithing-interaction");
 const { StorageInteraction } = require("./interactions/storage-interaction");
 const { getRandomInt } = require("./utils");
-const { writeFileSync } = require("fs");
+const { writeFileSync, appendFileSync, readFileSync } = require("fs");
 
 const buildingTypeToInteractable = {
   smithing: SmithingInteraction,
@@ -32,52 +32,79 @@ class GameMap {
     this.width = width;
     this.height = height;
     this.map = this.generateMap();
+    this.applyPersistedMap();
     this.applyConfiguration();
     // saveToJsonFile(this.map);
     this.cachedMap = {};
     this.cachedPos = {};
   }
 
-  applyConfiguration() {
-    mapConfiguration.forEach(
-      ({
-        type,
-        interactableType,
-        name,
-        description,
-        x,
-        y,
-        width,
-        height,
-        thickness,
-        objectType,
-        _static,
-        bgColor,
-        scale = 1,
-      }) => {
-        switch (type) {
-          case "interactable":
-            this.createInteractable(x, y, interactableType, name, description, scale);
-            this.applyScale(x, y);
-            break;
-          case "static":
-            this.placeObject(x, y, createObject(x, y, name, bgColor, true, null, scale));
-            if (scale > 1) {
-              this.applyScale(x, y);
-            }
-            break;
-          case "H":
-            this.placeHollowRectangle(x, y, objectType, bgColor, width, height, thickness, _static);
-            break;
-          case "F":
-            this.placeRectangle(x, y, objectType, bgColor, width, height, _static);
-            break;
-          default:
-            // Handle unsupported types or errors
-            console.error(`Unsupported type: ${type}`);
-        }
+  applyPersistedMap() {
+    const lines = readFileSync("./new-map", "utf8").split("\n");
+
+    for (const line of lines) {
+      try {
+        const r = JSON.parse(line);
+        console.log(r);
+        const o = createObject(r.x, r.y, r.type, r.bg, r.static);
+        this.placeObject(r.x, r.y, o);
+      } catch (error) {
+        console.error(`Error parsing JSON on line: ${line}`, error);
       }
-    );
+    }
+
+    this.cachedMap = {};
+  }
+
+  applyConfig({
+    type,
+    interactableType,
+    name,
+    description,
+    x,
+    y,
+    width,
+    height,
+    thickness,
+    objectType,
+    _static,
+    bgColor,
+    scale = 1,
+  }) {
+    switch (type) {
+      case "interactable":
+        this.createInteractable(x, y, interactableType, name, description, scale);
+        this.applyScale(x, y);
+        break;
+      case "static":
+        this.placeObject(x, y, createObject(x, y, name, bgColor, true, null, scale));
+        if (scale > 1) {
+          this.applyScale(x, y);
+        }
+        break;
+      case "H":
+        this.placeHollowRectangle(x, y, objectType, bgColor, width, height, thickness, _static);
+        break;
+      case "F":
+        this.placeRectangle(x, y, objectType, bgColor, width, height, _static);
+        break;
+      default:
+        // Handle unsupported types or errors
+        console.error(`Unsupported type: ${type}`);
+    }
+  }
+
+  applyConfiguration() {
+    mapConfiguration.forEach((c) => {
+      this.applyConfig(c);
+    });
+  }
+
+  painCell({ x, y, name, color, isStatic }) {
+    const o = createObject(x, y, name, color, isStatic);
+    this.placeObject(x, y, o);
+    appendFileSync("./new-map", JSON.stringify(o) + "\n");
+    this.cachedMap = {};
   }
 
   applyScale(x, y) {
@@ -322,18 +349,17 @@ function createRandomObject(x, y) {
   }
 }
 
-function createObject(x, y, type = "dirt", bg = "#4B5320", _static = false, material = null, scale = 1) {
+function createObject(x, y, type = "dirt", bg = "#4B5320", _static = false, material = undefined, scale = 1) {
   return {
     x,
     y,
     type,
     scale,
     bg,
-    occupiedBy: null,
-    interactable: null,
+    occupiedBy: undefined,
+    interactable: undefined,
     static: _static,
     material,
-    items: [],
   };
 }
 

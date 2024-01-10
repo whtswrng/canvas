@@ -36,6 +36,9 @@ async function init() {
     // const user = new User(socket, [createPlayer('Ferda', socket, 7, 7)]);
     await user.init();
 
+    socket.on('PAINT_CELL', (data) => {
+      map.painCell(data)
+    });
     // function printMap() {
     //   console.log("--------------------------");
     //   const playerMapView = map.getEntityMap(player);
