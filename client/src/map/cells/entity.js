@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import "./player.css";
 import { Tooltip } from "react-tooltip";
 import { socket } from "../../App";
+import { toKebabCase } from "../../utils";
 
 export const Entity = ({ cell, tooltipOpen }) => {
   const entity = cell.occupiedBy;
-  const backgroundImageUrl = `/images/${entity._class ?? entity.name.toLowerCase()}.jpg`; // Replace with your image URL
+  const backgroundImageUrl = `/images/entities/${entity._class ?? toKebabCase(entity.name)}.jpg`; // Replace with your image URL
   const [spellCasted, setSpellCasted] = useState(false);
 
   useEffect(() => {

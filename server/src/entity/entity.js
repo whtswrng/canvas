@@ -891,7 +891,7 @@ class Entity {
 
     doMove();
 
-    if (!doNotBlock) this.movingIsBlocked = true;
+    if (!doNotBlock && this.type === 'player') this.movingIsBlocked = true;
   }
 
   isDead() {

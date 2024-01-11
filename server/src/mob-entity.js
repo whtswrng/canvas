@@ -56,7 +56,21 @@ class MobEntity extends Entity {
     this.autoDefend = autoDefend;
     this.dropExperience = dropExperience;
     this.baseAttrs = this.attrs;
-    this.movementSpeed = 2000;
+    this.movementSpeed = getRandomInt(2000, 4000);
+    this.combatMovementSpeed = 650;
+  }
+
+  init() {
+    super.init();
+    const movementSpeed = this.movementSpeed;
+    
+    setInterval(() => {
+      if(this.state === 'ATTACKING') {
+        this.movementSpeed = this.combatMovementSpeed;
+      } else {
+        this.movementSpeed = movementSpeed;
+      }
+    });
   }
 
   gainExperience(exp) {
