@@ -86,7 +86,7 @@ const mountainRange = [
 ];
 
 const desert = [
-  { type: "F", objectType: "sand-dunes", bgColor: "#F4E3CB", x: 98, y: 98, width: 450, height: 450 },
+  { type: "F", objectType: "sand-dunes", bgColor: "#F4E3CB", x: 98, y: 98, width: 390, height: 390 },
   { type: "F", objectType: "rocky-outcrops", bgColor: "#D2B48C", x: 98, y: 98, width: 150, height: 150 },
   { type: "F", objectType: "barren-lands", bgColor: "#C0C0C0", x: 98, y: 248, width: 150, height: 150 },
   { type: "F", objectType: "rolling-dunes", bgColor: "#E0CDA3", x: 248, y: 98, width: 150, height: 150 },
@@ -131,7 +131,6 @@ const ancientForest = [
 ];
 
 const mapConfiguration = [
-  ...city,
   ...grassLand,
   ...forest,
   ...swamp,
@@ -141,6 +140,7 @@ const mapConfiguration = [
   ...snow,
   ...ancientForest,
   ...border,
+  ...city,
 ];
 
 module.exports = {

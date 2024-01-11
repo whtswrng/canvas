@@ -107,7 +107,7 @@ class EntityController {
       this.lastState = newState;
       this.tempData = {};
 
-      console.log("newState", this.entity.name, newState, this.returningBackFromFight);
+      // console.log("newState", this.entity.name, newState, this.returningBackFromFight);
       if ([STATE.IDLE].includes(newState)) {
         this.resetCombatInterval();
         this.handlePathingActions();

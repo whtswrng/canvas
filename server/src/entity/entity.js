@@ -141,7 +141,6 @@ class Entity {
   }
 
   init() {
-    console.log("FUCKING CALLLLLLLLLLEEEEEEEEEEED");
     // base attrs
     this.baseAttrs = this.generateBaseAttrs();
 
@@ -406,7 +405,6 @@ class Entity {
   }
 
   removeItems(items) {
-    console.log("removing items", items);
     this.inventory.removeItems(items);
   }
 
@@ -447,7 +445,6 @@ class Entity {
         return [directionX, directionY];
       }
 
-      console.log("Cannot move in any direction");
     }
 
     return [directionX, directionY];
@@ -524,7 +521,6 @@ class Entity {
   }
 
   changeState(state) {
-    console.log("calling change state", state);
     if (this.state === STATE.INTERACTING) {
       this.interactableObject?.stopInteracting?.(this);
       this.interactableObject = null;
@@ -552,7 +548,6 @@ class Entity {
         if (!this.attacking) {
           return stop();
         }
-        console.log(this.name, this.isEnemyInRange(enemy));
         if (this.isEnemyInRange(enemy)) {
           this.hitEnemy(enemy);
         } else {
