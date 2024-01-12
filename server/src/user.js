@@ -1,4 +1,6 @@
 const fs = require("fs");
+const { mapConfiguration } = require("./config/map");
+const { mobs } = require("./config/mob");
 
 let controlPanelInMemory = [];
 
@@ -196,6 +198,10 @@ class User {
           id: p.player.id,
         }))
       );
+    });
+
+    this.socket.on("FETCH_WORLD_INFORMATION", (data, cb) => {
+      cb({map: mapConfiguration, mobs: mobs });
     });
 
     this.socket.on("FETCH_CONTROL_PANEL", (data, cb) => {

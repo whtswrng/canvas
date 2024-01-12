@@ -530,4 +530,5 @@ function createMob(x, y, data) {
 module.exports = {
   createMob,
   spawnMobs,
+  mobs
 };

@@ -4,12 +4,13 @@ import { Tooltip } from "react-tooltip";
 import { socket } from "../../App";
 import { toKebabCase } from "../../utils";
 
-export const Entity = ({ cell, tooltipOpen }) => {
+export const Entity = ({ cell, tooltipOpen, noSocket }) => {
   const entity = cell.occupiedBy;
   const backgroundImageUrl = `/images/entities/${entity._class ?? toKebabCase(entity.name)}.jpg`; // Replace with your image URL
   const [spellCasted, setSpellCasted] = useState(false);
 
   useEffect(() => {
+    if(noSocket) return;
     const listener = socket.on("ENEMY_HIT", ({ playerId }) => {
       if (playerId === entity.id) {
         setSpellCasted(true);

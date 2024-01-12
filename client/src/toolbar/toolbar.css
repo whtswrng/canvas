@@ -1,0 +1,18 @@
+
+.toolbar {
+    display: flex;
+    margin-left: 20px;
+    padding: 0px;
+    background-color: inherit;
+    border: 0px;
+}
+
+.toolbar .map {
+    opacity: 0.75;
+    font-size: 30px;
+    cursor: pointer;
+}
+
+.toolbar .map:hover {
+    opacity: 1;
+}

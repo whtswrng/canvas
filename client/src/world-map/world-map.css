@@ -1,0 +1,65 @@
+.world-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(6, 6, 6, 0.384);
+  z-index: 50;
+  top: 0;
+}
+
+.world-container .content {
+  position: absolute;
+  width: 900px;
+  height: 700px;
+  padding: 20px;
+  margin-top: 50px;
+  background-color: #f2f2f2;
+  z-index: 99;
+  left: 30%;
+  border-radius: 5px;
+  display: flex;
+  align-items: baseline;
+}
+
+.world-container .world-map {
+  border: 2px solid black;
+}
+
+.world-container .simple-cell {
+  cursor: pointer;
+}
+
+.world-container .left-side {
+  flex-grow: 2;
+  margin-right: 5px;
+  overflow: auto;
+  height: 700px;
+}
+
+.world-container .right-side {
+  flex-grow: 3;
+}
+
+.world-container .inventory-item {
+  width: 30px;
+  height: 30px;
+}
+
+.world-container .mob-detail {
+  border-bottom: 0.3px solid black;
+  padding: 5px;
+}
+
+.world-container .mob-info {
+  display: flex;
+  font-size: 10px;
+}
+
+.world-container .mob-image {
+  width: 50px;
+  height: 50px;
+  background-size: cover;
+  background-position: center;
+  margin-right: 4px;
+  margin-bottom: 4px;
+}
